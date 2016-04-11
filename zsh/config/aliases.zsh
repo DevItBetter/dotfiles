@@ -62,8 +62,12 @@ alias bbb_serial="screen /dev/ttyUSB0 115200"
 alias BBB_serial=bbb_serial
 
 # -------------------------------------------------------------------
-# Git setup
+# Git stuff
 # -------------------------------------------------------------------
+alias gs="git status"
+alias ga="git add"
+alias gcm="git commit -m"
+
 alias git-pull-antigen='pushd ~/dotfiles; git subtree pull --prefix zsh/antigen https://github.com/zsh-users/antigen.git master --squash; popd'
 #alias git-pull-z='pushd ~/.dotfiles; git fetch z master; git subtree pull --prefix .zsh/z z master --squash; popd'
 
