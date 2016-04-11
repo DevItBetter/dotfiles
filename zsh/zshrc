@@ -1,10 +1,36 @@
+echo Zsh v$ZSH_VERSION
+
 
 #load Antigen
-source ~/.antigen.zsh
+source ~/dotfiles/zsh/antigen/antigen.zsh
+
+antigen use oh-my-zsh
+
+# Version control
+antigen bundle git
 
 # Python Plugins
 antigen bundle pip
 antigen bundle python
 antigen bundle virtualenv
 
+#General
+antigen bundle command-not-found
 
+
+# Syntax highlighting bundle.
+antigen bundle zsh-users/zsh-syntax-highlighting
+
+antigen theme robbyrussell
+
+
+
+source ~/dotfiles/zsh/config/aliases.zsh
+source ~/dotfiles/zsh/config/bindkeys.zsh
+source ~/dotfiles/zsh/config/completions.zsh
+source ~/dotfiles/zsh/config/exports.zsh
+source ~/dotfiles/zsh/config/functions.zsh
+source ~/dotfiles/zsh/config/history.zsh
+source ~/dotfiles/zsh/config/setopt.zsh
+
+antigen apply
