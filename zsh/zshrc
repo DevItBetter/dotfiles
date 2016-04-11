@@ -1,0 +1,10 @@
+
+#load Antigen
+source ~/.antigen.zsh
+
+# Python Plugins
+antigen bundle pip
+antigen bundle python
+antigen bundle virtualenv
+
+
