@@ -14,3 +14,11 @@ export EDITOR='leafpad'
 
 # Virtual Environment Stuff
 export WORKON_HOME=$HOME/.virtualenvs
+
+export GTEST_INCLUDE_DIR=/home/jeff/code/lib/googletest/googletest/include
+export GTEST_SOURCE_DIR=/home/jeff/code/lib/googletest/googletest
+
+
+#Go
+export GOPATH=$HOME/go
+export PATH=$PATH:$HOME/go/bin:/usr/local/go/bin
