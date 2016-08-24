@@ -1,5 +1,5 @@
 #!/bin/zsh
 
-ln -sf $(pwd)/zsh/zshrc ~/.zshrc
-ln -sf $(pwd)/fonts ~/.fonts/
-ln -sf $(pwd)/git/gitconfig ~/.gitconfig
+ln -sf $(pwd)/fonts $HOME/.fonts
+ln -sf $(pwd)/zsh/zshrc $HOME/.zshrc
+ln -sf $(pwd)/git/gitconfig $HOME/.gitconfig
