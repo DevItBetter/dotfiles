@@ -94,3 +94,5 @@ alias sz='source ~/.zshrc'
 alias reload=". ~/.zshrc && echo 'ZSH config reloaded from ~/.zshrc'"
 alias zshrc="gedit ~/.zshrc && reload"
 
+alias monero_miner_cpu='sudo minerd -a cryptonight -o stratum+tcp://monerohash.com:3333 -u 44pmQCX7wWo8C5y8SFUTdxceToPj4CwFxDotk6tuQu9ihU6ifTsUuTg7whFXKdNnxJAnh7b39fTo51RDJFLm26qvM8WmKTc'
+

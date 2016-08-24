@@ -14,6 +14,8 @@ export EDITOR='leafpad'
 
 # Virtual Environment Stuff
 export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
+source /usr/local/bin/virtualenvwrapper_lazy.sh
 
 export GTEST_INCLUDE_DIR=/home/jeff/code/lib/googletest/googletest/include
 export GTEST_SOURCE_DIR=/home/jeff/code/lib/googletest/googletest
@@ -22,3 +24,9 @@ export GTEST_SOURCE_DIR=/home/jeff/code/lib/googletest/googletest
 #Go
 export GOPATH=$HOME/go
 export PATH=$PATH:$HOME/go/bin:/usr/local/go/bin
+
+#NVM
+export NVM_DIR="/home/jeff/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+
+
