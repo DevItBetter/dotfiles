@@ -3,6 +3,7 @@
 # -------------------------------------------------------------------
 #alias foobar='nocorrect foobar'
 #alias g8='nocorrect g8'
+alias git='nocorrect git'
 
 # -------------------------------------------------------------------
 # search
@@ -83,6 +84,8 @@ alias off="deactivate"
 # -------------------------------------------------------------------
 # Oddball stuff
 # -------------------------------------------------------------------
+alias display-1-monitor='xrandr --output DP1 --scale 1.5x1.5 --fb 3840x3760 --pos 0x0;xrandr --output eDP1 --scale 1x1 --pos 840x2300'
+
 alias 'ttop=top -acu $USER -s -n30' # fancy top
 
 # Force tmux to use 256 colors
