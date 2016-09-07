@@ -14,6 +14,9 @@ antigen bundle pip
 antigen bundle python
 antigen bundle virtualenv
 
+# Node
+antigen bundle lukechilds/zsh-nvm
+
 #General
 antigen bundle command-not-found
 
