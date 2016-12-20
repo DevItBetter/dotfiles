@@ -1,75 +1,119 @@
 echo Zsh v$ZSH_VERSION
+
+if [[ $TERMINIX_ID ]]; then
+    source /etc/profile.d/vte.sh
+fi
+
+# Setup terminal, and turn on colors
 export TERM="xterm-256color"
-
-#load Antigen
-source ~/dotfiles/zsh/antigen/antigen.zsh
-
-antigen use oh-my-zsh
-
-# Version control
-antigen bundle git
-
-# Python Plugins
-antigen bundle pip
-antigen bundle python
-antigen bundle virtualenv
-
-# Node
-antigen bundle lukechilds/zsh-nvm
-
-#General
-antigen bundle command-not-found
-
-
-# Syntax highlighting bundle.
-antigen bundle zsh-users/zsh-syntax-highlighting
-
-antigen theme bhilburn/powerlevel9k powerlevel9k
-POWERLEVEL9K_MODE='awesome-patched'
-POWERLEVEL9K_VCS_GIT_ICON=''
-POWERLEVEL9K_VCS_STAGED_ICON='\u00b1'
-POWERLEVEL9K_VCS_UNTRACKED_ICON='\u25CF'
-POWERLEVEL9K_VCS_UNSTAGED_ICON='\u00b1'
-POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='\u2193'
-POWERLEVEL9K_VCS_OUTGOING_CHANGES_ICON='\u2191'
-
-POWERLEVEL9K_VCS_MODIFIED_BACKGROUND='yellow'
-POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND='yellow'
-
-POWERLEVEL9K_SHORTEN_DIR_LENGTH=4
-POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
-
-POWERLEVEL9K_NVM_BACKGROUND="black"
-POWERLEVEL9K_NVM_FOREGROUND="249"
-POWERLEVEL9K_NVM_VISUAL_IDENTIFIER_COLOR="green"
-POWERLEVEL9K_RVM_BACKGROUND="black"
-POWERLEVEL9K_RVM_FOREGROUND="249"
-POWERLEVEL9K_RVM_VISUAL_IDENTIFIER_COLOR="red"
-POWERLEVEL9K_LOAD_CRITICAL_BACKGROUND="black"
-POWERLEVEL9K_LOAD_WARNING_BACKGROUND="black"
-POWERLEVEL9K_LOAD_NORMAL_BACKGROUND="black"
-POWERLEVEL9K_LOAD_CRITICAL_FOREGROUND="249"
-POWERLEVEL9K_LOAD_WARNING_FOREGROUND="249"
-POWERLEVEL9K_LOAD_NORMAL_FOREGROUND="249"
-POWERLEVEL9K_LOAD_CRITICAL_VISUAL_IDENTIFIER_COLOR="red"
-POWERLEVEL9K_LOAD_WARNING_VISUAL_IDENTIFIER_COLOR="yellow"
-POWERLEVEL9K_LOAD_NORMAL_VISUAL_IDENTIFIER_COLOR="green"
-POWERLEVEL9K_RAM_BACKGROUND="black"
-POWERLEVEL9K_RAM_FOREGROUND="249"
-POWERLEVEL9K_RAM_ELEMENTS=(ram_free)
+export GREP_COLOR='3;33'
 
 export DEFAULT_USER="$USER"
+export ARCHFLAGS='-arch x86_64'
 
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs)
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status history virtualenv nvm)
+export LESS='--ignore-case --raw-control-chars'
+export PAGER='less'
+export EDITOR='leafpad'
 
+# Virtual Environment Stuff
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
+source /usr/local/bin/virtualenvwrapper.sh
 
-source ~/dotfiles/zsh/config/aliases.zsh
-source ~/dotfiles/zsh/config/bindkeys.zsh
-source ~/dotfiles/zsh/config/completions.zsh
-source ~/dotfiles/zsh/config/exports.zsh
-source ~/dotfiles/zsh/config/functions.zsh
+# Node
+export NVM_NO_USE=true #stop NVM from using default node version on load
+
+#Zsh history settings
 source ~/dotfiles/zsh/config/history.zsh
 source ~/dotfiles/zsh/config/setopt.zsh
+source ~/dotfiles/zsh/config/completions.zsh
+source ~/dotfiles/zsh/config/bindkeys.zsh
+source ~/dotfiles/zsh/config/aliases.zsh
 
-antigen apply
+# Useful functions
+source ~/dotfiles/zsh/config/functions.zsh
+
+# Check if zplug is installed
+if [[ ! -d ~/.zplug ]]; then
+  git clone https://github.com/zplug/zplug ~/.zplug
+  source ~/.zplug/init.zsh && zplug update --self
+fi
+
+# load zplug 
+source ~/.zplug/init.zsh
+
+# setup theme
+source ~/dotfiles/zsh/config/theme.zsh
+zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
+
+zplug "zplug/zplug"
+
+# git
+#zplug "plugins/git", from:oh-my-zsh,  as:command, nice:10
+#zplug "cunixorn/git-extra-commands", as:command
+#zplug "peterhurford/git-aliases"
+
+# python
+zplug "plugins/pip", from:oh-my-zsh, as:command, ignore: oh-my-zsh
+zplug "srijanshetty/zsh-pip-completion"
+zplug "plugins/python", from:oh-my-zsh, as:command, ignore: oh-my-zsh
+#zplug "virtualenv", from:oh-my-zsh, as:command, ignore: oh-my-zsh
+#zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
+
+# nodejs
+zplug "lukechilds/zsh-nvm"
+zplug "lukechilds/zsh-better-npm-completion"
+zplug "tomsquest/nvm-auto-use.zsh"
+
+# other awesome stuff
+#zplug "trapd00r/LS_COLORS"
+#eval $( dircolors -b $HOME/.zplug/repos/trapd00r/LS_COLORS/LS_COLORS)
+zplug "chrissicool/zsh-256color"
+zplug "plugins/command-not-found", from:oh-my-zsh, as:plugin, ignore: oh-my-zsh
+zplug "zsh-users/zsh-syntax-highlighting", nice:18
+#zplug "trapd00r/zsh-syntax-highlighting-filetypes", nice:19
+
+
+zplug "zsh-users/zsh-completions"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=7'
+zplug "zsh-users/zsh-autosuggestions"
+zplug "djui/alias-tips"
+
+#live search (peco)
+#zplug "peco/peco",    from:gh-r,    as:command,    use: "linux_amd64.tar.gz" rename-to:peco
+zplug "junegunn/fzf-bin", \
+    from:gh-r, \
+    as:command, \
+    use:"*linux*amd64*", \
+    rename-to:fzf
+#zplug "jimeh/zsh-peco-history"
+
+# better cd
+zplug "knu/z"
+
+# better ls
+zplug "supercrabtree/k"
+
+# install uninstalled plugins
+zplug check || zplug install
+
+# Then, source plugins and add commands to $PATH
+zplug load --verbose
+
+# Get more plugins from https://github.com/unixorn/awesome-zsh-plugins
+
+
+# Environment Settings
+
+#source ~/dotfiles/zsh/config/exports.zsh
+
+
+
+
+
+
+
+
+
+# profit
+#[[ $SHLVL != "2" ]] && tmux new

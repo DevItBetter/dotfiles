@@ -1,5 +1,84 @@
+# Export bash function to command.
+
+# you should execute  . ./yourscript.sh to to make your script to affect the parent shell's environment.
+#!/bin/bash
+
+# spike() {
+#    echo $1
+# }
+# export -f spike
+
+# list commands used most often
+favorite_commands(){
+  history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head
+}
+
+
+# gather system performance statistics
+# #!/bin/bash
+# ##################################################
+# DATE=`date +%m/%d/%Y`
+# TIME=`date +%k:%M:%S`
+# USERS=`uptime | sed 's/users.*$//' | gawk '{print $NF}'`
+# LOAD=`uptime | gawk '{print $NF}'`
+# FREE=`vmstat 1 2 | sed -n '/[0-9]/p' | sed -n '2p' | gawk '{print $4}'`
+# IDLE=`vmstat 1 2 | sed -n '/[0-9]/p' | sed -n '2p' | gawk '{print $15}'`
+# #########################################
+# # Send Statistics
+# #########################################
+# echo "=================="
+# echo "DATE: ==> $DATE"
+# echo "TIME: ==> $TIME"
+# echo "USERS: ==> $USERS"
+# echo "LOAD: ==> $LOAD"
+# echo "FREE: ==> $FREE"
+# echo "IDLE: ==> $IDLE"
+# echo "=================="
+
+
+# improve performance -- too many files open
+# 1 echo 2048 > /proc/sys/fs/file-max
+# 2 edit /etc/sysctl.conf add following code:
+#     fs.file-max = 8192
+# 3 edit /etc/security/limits.conf add following code:
+#     * - nofile 8192
+# 4 ulimit -n 8192
+
+
+# rsync over ssh
+# rsync -avz -e ssh root@hostname:/tmp/xxxx /temp/
+
+# directory size
+# du -h -s  /usr/local/xxxx
+
+
+#   5 minutes for cron table.
+#  1. create /etc/cron.5mitues and put script under this directory
+#  2. add code to /etc/crontab
+#  3. /etc/init.d/crond restart
+
+# */5 * * * * root run-parts /etc/cron.5mitues
+
+
+# A function to list the numerical values of the 256 ANSI screen colors available in bash.
+
+# The default is to output the colors in 3 columns.
+
+# To change the number of columns, provide the number of columns on the command line like this:
+# display-ansi-color-chart 4
+
+# Above will display 4 columns instead of the default of 3.
+function display-ansi-color-chart() {
+  local i
+  local col=$((${1:-3} * 8))
+  for i in {0..255}; do
+    echo -e "\e[38;05;${i}m $i: This is a color test"
+  done | column -c$col
+  echo -e "\e[m"
+}
+
 # -------------------------------------------------------------------
-# compressed file expander 
+# compressed file expander
 # (from https://github.com/myfreeweb/zshuery/blob/master/zshuery.sh)
 # -------------------------------------------------------------------
 ex() {

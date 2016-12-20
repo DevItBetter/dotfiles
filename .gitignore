@@ -506,4 +506,8 @@ paket-files/
 .idea/
 *.sln.iml
 
+# Antibody bundled plugins
+bundled_plugins.zsh
 
+.nvmrc
+.project

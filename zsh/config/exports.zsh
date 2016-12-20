@@ -1,7 +1,8 @@
 # Setup terminal, and turn on colors
-export TERM=xterm-256color
-
+export TERM="xterm-256color"
 export GREP_COLOR='3;33'
+
+export DEFAULT_USER="$USER"
 
 # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
 export ARCHFLAGS='-arch x86_64'
@@ -15,18 +16,7 @@ export WORKON_HOME=$HOME/.virtualenvs
 export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
 source /usr/local/bin/virtualenvwrapper.sh
 
-export GTEST_INCLUDE_DIR=/home/jeff/code/lib/googletest/googletest/include
-export GTEST_SOURCE_DIR=/home/jeff/code/lib/googletest/googletest
-
-
-#Go
-export GOPATH=$HOME/go
-export PATH=$PATH:$HOME/go/bin:/usr/local/go/bin
-
-#NVM
-export NVM_DIR="/home/jeff/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
-
-export PATH=$PATH:/home/jeff/apps/doxypypy-0.8.8.6
-
+# Node
+export NVM_NO_USE=true #stop NVM from using default node version on load
+export NVM_LAZY_LOAD=true #lazy load nvm
+export CMD_ENV=linux

@@ -12,11 +12,12 @@ bindkey "^D"      delete-char                          # ctrl-d
 bindkey "^F"      forward-char                         # ctrl-f
 bindkey "^B"      backward-char                        # ctrl-b
 bindkey "^[[3~"   delete-char                          # delete on 101 key keyboard
-bindkey "^[OF"    end-of-line                     # end
-bindkey "^[OH"    beginning-of-line                             # home
-bindkey "^[[1;5D" backward-word                    #ctrl+left arrow
-bindkey "^[[1;5C" forward-word                    #ctrl+right arrow
-
+bindkey "^[OF"    end-of-line                          # end
+bindkey "^[OH"    beginning-of-line                    # home
+bindkey "^[[1;5D" backward-word                        #ctrl+left arrow
+bindkey "^[[1;5C" forward-word                         #ctrl+right arrow
+#bindkey '^[[A' history-substring-search-up
+#bindkey '^[[B' history-substring-search-down
 shift-arrow() {
   ((REGION_ACTIVE)) || zle set-mark-command
   zle $1
