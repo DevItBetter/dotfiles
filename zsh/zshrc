@@ -117,3 +117,5 @@ zplug load --verbose
 
 # profit
 #[[ $SHLVL != "2" ]] && tmux new
+
+export PATH="$HOME/.yarn/bin:$PATH"
