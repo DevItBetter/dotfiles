@@ -95,24 +95,24 @@ alias off="deactivate"
 # -------------------------------------------------------------------
 # Oddball stuff
 # -------------------------------------------------------------------
-alias display-1-monitor="xrandr --output DP1 --scale 1.5x1.5 --fb 3840x3760 --pos 0x0; \
-                         xrandr --output eDP1 --scale 1x1 --pos 840x2300"
+#alias display-1-monitor="xrandr --output DP1 --scale 1.5x1.5 --fb 3840x3760 --pos 0x0; \
+#                         xrandr --output eDP1 --scale 1x1 --pos 840x2300"
 
-alias display-2-monitor="xrandr --output eDP1 --off; \
-                         xrandr --output DP1 --mode 2560x1440 --scale 1x1 \
-                                --output DP2 --mode 2560x1440 --scale 1x1 --right-of DP1;  \
-                         xfconf-query -c xsettings -p /Xft/DPI -s -1; \
-                         xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 0; \
-                         xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s ''; \
-                         xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 0;"
+#alias display-2-monitor="xrandr --output eDP1 --off; \
+#                         xrandr --output DP1 --mode 2560x1440 --scale 1x1 \
+#                                --output DP2 --mode 2560x1440 --scale 1x1 --right-of DP1;  \
+#                         xfconf-query -c xsettings -p /Xft/DPI -s -1; \
+#                         xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 0; \
+#                         xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s ''; \
+#                         xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 0;"
 
 # alias display-swap="xrandr --output DP1 --right-of DP2;"
 
-alias display-laptop="xrandr --output eDP1 --mode 2560x1600 --scale 1x1; \
-                      xfconf-query -c xsettings -p /Xft/DPI -s $(xfconf-query -c xsettings -p /Xfce/LastCustomDPI); \
-                      xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s '%I:%M %p'; \
-                      xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 2; \
-                      xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 2;"
+#alias display-laptop="xrandr --output eDP1 --mode 2560x1600 --scale 1x1; \
+#                      xfconf-query -c xsettings -p /Xft/DPI -s $(xfconf-query -c xsettings -p /Xfce/LastCustomDPI); \
+#                      xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s '%I:%M %p'; \
+#                      xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 2; \
+#                      xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 2;"
 
 # Force tmux to use 256 colors
 alias tmux='TERM=screen-256color-bce tmux'

@@ -1,6 +1,6 @@
 echo Zsh v$ZSH_VERSION
 
-if [[ $TERMINIX_ID ]]; then
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
     source /etc/profile.d/vte.sh
 fi
 
@@ -16,12 +16,14 @@ export PAGER='less'
 export EDITOR='leafpad'
 
 # Virtual Environment Stuff
+VIRTUALENVWRAPPER_PYTHON='/usr/bin/python3'
+export PROJECT_HOME=$HOME/code/personal
 export WORKON_HOME=$HOME/.virtualenvs
 export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
 source /usr/local/bin/virtualenvwrapper.sh
 
 # Node
-export NVM_NO_USE=true #stop NVM from using default node version on load
+#export NVM_NO_USE=true #stop NVM from using default node version on load
 
 #Zsh history settings
 source ~/dotfiles/zsh/config/history.zsh
@@ -49,7 +51,7 @@ zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 zplug "zplug/zplug"
 
 # git
-#zplug "plugins/git", from:oh-my-zsh,  as:command, nice:10
+#zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
 #zplug "cunixorn/git-extra-commands", as:command
 #zplug "peterhurford/git-aliases"
 
@@ -70,8 +72,8 @@ zplug "tomsquest/nvm-auto-use.zsh"
 #eval $( dircolors -b $HOME/.zplug/repos/trapd00r/LS_COLORS/LS_COLORS)
 zplug "chrissicool/zsh-256color"
 zplug "plugins/command-not-found", from:oh-my-zsh, as:plugin, ignore: oh-my-zsh
-zplug "zsh-users/zsh-syntax-highlighting", nice:18
-#zplug "trapd00r/zsh-syntax-highlighting-filetypes", nice:19
+zplug "zsh-users/zsh-syntax-highlighting", defer:3
+#zplug "trapd00r/zsh-syntax-highlighting-filetypes", defer:4
 
 
 zplug "zsh-users/zsh-completions"
@@ -98,7 +100,7 @@ zplug "supercrabtree/k"
 zplug check || zplug install
 
 # Then, source plugins and add commands to $PATH
-zplug load --verbose
+zplug load
 
 # Get more plugins from https://github.com/unixorn/awesome-zsh-plugins
 
@@ -107,15 +109,23 @@ zplug load --verbose
 
 #source ~/dotfiles/zsh/config/exports.zsh
 
+xrandr --setprovideroffloadsink 1 0
 
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=$(go env GOPATH)
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-
-
-
+export PATH=$PATH:~/apps
 
 
 # profit
 #[[ $SHLVL != "2" ]] && tmux new
 
 export PATH="$HOME/.yarn/bin:$PATH"
+
+#export STAGING_DIR=/home/jeff/code/cybercar/LMU5530/sdk-prec/staging_dir/toolchain-arm_cortex-a9+vfpv3_gcc-4.8-linaro_uClibc-0.9.33.2_eabi/bin
+export STAGING_DIR=/home/jeff/code/openwrt/staging_dir/toolchain-arm_mpcore+vfp_gcc-4.8-linaro_uClibc-0.9.33.2_eabi/bin
+export PROTO_SRC=/home/jeff/code/pilot/prototype
+export STP_SRC=/home/jeff/code/cybercar/linux
