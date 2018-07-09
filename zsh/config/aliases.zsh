@@ -108,25 +108,6 @@ alias off="deactivate"
 
 # alias display-swap="xrandr --output DP1 --right-of DP2;"
 
-#alias display-laptop="xrandr --output eDP1 --mode 2560x1600 --scale 1x1; \
-#                      xfconf-query -c xsettings -p /Xft/DPI -s $(xfconf-query -c xsettings -p /Xfce/LastCustomDPI); \
-#                      xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s '%I:%M %p'; \
-#                      xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 2; \
-#                      xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 2;"
-                      
-alias display-3+1="xrandr --output DP-1-3 --mode 1920x1080 --left-of HDMI-2; \
-                   xrandr --output HDMI-2 --mode 1920x1080 --primary --left-of DP-7; \
-                   xrandr --output DP-7 --mode 1920x1080 --left-of eDP-2; \
-                   xrandr --output eDP-2 --mode 1920x1080;"
-                   
-alias display-3=  "xrandr --output DP-1-3 --mode 1920x1080 --left-of HDMI-2; \
-                   xrandr --output HDMI-2 --mode 1920x1080 --primary --left-of DP-7; \
-                   xrandr --output DP-7 --mode 1920x1080; \
-                   xrandr --output eDP-2 --off;"
-
-alias display-1="xrandr --output eDP-2 --mode 1920x1080 --primary;"
-
-alias mssql-cli="~/.local/bin/mssql-cli -U CPADBadmin -P T3rum0bct -S 10.183.129.34 -d CPADB_000182_OrionDeviceTeamDemo"
 
 # Force tmux to use 256 colors
 alias tmux='TERM=screen-256color-bce tmux'

@@ -1,7 +1,7 @@
 echo Zsh v$ZSH_VERSION
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-        source /etc/profile.d/vte.sh
+    source /etc/profile.d/vte.sh
 fi
 
 #Zsh history settings
@@ -30,7 +30,7 @@ zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 zplug "zplug/zplug"
 
 # git
-#zplug "plugins/git", from:oh-my-zsh,  as:command, nice:10
+#zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
 #zplug "cunixorn/git-extra-commands", as:command
 #zplug "peterhurford/git-aliases"
 
@@ -51,8 +51,8 @@ zplug "tomsquest/nvm-auto-use.zsh"
 #eval $( dircolors -b $HOME/.zplug/repos/trapd00r/LS_COLORS/LS_COLORS)
 zplug "chrissicool/zsh-256color"
 zplug "plugins/command-not-found", from:oh-my-zsh, as:plugin, ignore: oh-my-zsh
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-#zplug "trapd00r/zsh-syntax-highlighting-filetypes", nice:19
+zplug "zsh-users/zsh-syntax-highlighting", defer:3
+#zplug "trapd00r/zsh-syntax-highlighting-filetypes", defer:4
 
 
 zplug "zsh-users/zsh-completions"
@@ -91,3 +91,4 @@ source ~/dotfiles/zsh/config/exports.zsh
 
 
 export PATH="$HOME/.yarn/bin:$PATH"
+
