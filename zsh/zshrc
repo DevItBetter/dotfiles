@@ -24,15 +24,18 @@ fi
 source ~/.zplug/init.zsh
 
 # setup theme
-source ~/dotfiles/zsh/config/theme.zsh
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
+# source ~/dotfiles/zsh/config/theme.zsh
+# zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
+# zplug romkatv/powerlevel10k, as:theme, depth:1
+zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 
 zplug "zplug/zplug"
 
+zplug "colcon/colcon-core", as:command, use:"python/colcon"
+zplug "colcon/colcon-cmake"
+
 # git
-#zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
-#zplug "cunixorn/git-extra-commands", as:command
-#zplug "peterhurford/git-aliases"
+zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
 
 # python
 zplug "plugins/pip", from:oh-my-zsh, as:command, ignore: oh-my-zsh
@@ -42,16 +45,16 @@ zplug "plugins/python", from:oh-my-zsh, as:command, ignore: oh-my-zsh
 #zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
 
 # nodejs
-zplug "lukechilds/zsh-nvm"
+# zplug "lukechilds/zsh-nvm"
 zplug "lukechilds/zsh-better-npm-completion"
-zplug "tomsquest/nvm-auto-use.zsh"
+# zplug "tomsquest/nvm-auto-use.zsh"
 
 # other awesome stuff
 #zplug "trapd00r/LS_COLORS"
 #eval $( dircolors -b $HOME/.zplug/repos/trapd00r/LS_COLORS/LS_COLORS)
 zplug "chrissicool/zsh-256color"
 zplug "plugins/command-not-found", from:oh-my-zsh, as:plugin, ignore: oh-my-zsh
-zplug "zsh-users/zsh-syntax-highlighting", defer:3
+zplug "zsh-users/zsh-syntax-highlighting", defer:2
 #zplug "trapd00r/zsh-syntax-highlighting-filetypes", defer:4
 
 
@@ -62,18 +65,17 @@ zplug "djui/alias-tips"
 
 #live search (peco)
 #zplug "peco/peco",    from:gh-r,    as:command,    use: "linux_amd64.tar.gz" rename-to:peco
-zplug "junegunn/fzf-bin", \
-    from:gh-r, \
-    as:command, \
-    use:"*linux*amd64*", \
-    rename-to:fzf
 #zplug "jimeh/zsh-peco-history"
 
-# better cd
-zplug "knu/z", use:z.sh, defer:2
+zplug "junegunn/fzf-bin", from:gh-r, as:command, use:"*linux*amd64*", rename-to:fzf
+
+zplug "so-fancy/diff-so-fancy", as:command, use:"third_party/build_fatpack/diff-so-fancy"
+zplug "denilsonsa/prettyping", as:command, use:"prettyping"
+
+
 
 # better ls
-zplug "supercrabtree/k"
+zplug "supercrabtree/k", as:plugin
 
 # install uninstalled plugins
 zplug check || zplug install
@@ -81,14 +83,6 @@ zplug check || zplug install
 # Then, source plugins and add commands to $PATH
 zplug load
 
-# Get more plugins from https://github.com/unixorn/awesome-zsh-plugins
-
-
 # Environment Settings
-
 source ~/dotfiles/zsh/config/exports.zsh
-
-
-
-export PATH="$HOME/.yarn/bin:$PATH"
-
+source ~/dotfiles/zsh/config/work.zsh

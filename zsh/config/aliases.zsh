@@ -5,6 +5,7 @@ alias mv='nocorrect mv'
 alias cp='nocorrect cp'
 alias mkdir='nocorrect mkdir'
 alias git='nocorrect git'
+alias pygmentize='nocorrect pygmentize'
 
 # -------------------------------------------------------------------
 # globals are awesome
@@ -18,7 +19,7 @@ alias -g LL="2>&1 | less"
 alias -g CA="2>&1 | cat -A"
 alias -g NE="2> /dev/null"
 alias -g NUL="> /dev/null 2>&1"
-#alias -g P="2>&1| pygmentize -l pytb"
+alias -g P="2>&1| pygmentize -l cpp"
 
 # -------------------------------------------------------------------
 # getting around
@@ -49,8 +50,8 @@ alias fna='tar -ztvf xxx.tar.gz |grep yyyy' #find in archive
 # show me things
 # -------------------------------------------------------------------
 alias ls='ls --color=auto'
-alias lsh='ls -aFhld' # only directories
-alias lshd='ls -aFhl .*' #list hidden directories
+alias lsd='ls -aFhld' # only directories
+alias lsdh='ls -aFhl .*' #list hidden directories
 alias l='ls -alh'
 #alias ls='ls -Fh' # Colorize output, add file type indicator, and put sizes in human readable format
 alias ll='ls -Fhl' # Same as above, but in long listing format
@@ -67,11 +68,6 @@ alias lsnreadable='ls -AFtrd *(^R)'
 # alias nrable=lsnreadable
 
 
-# -------------------------------------------------------------------
-# remote machines
-# -------------------------------------------------------------------
-#alias bbb_serial="screen /dev/ttyUSB0 115200"
-#alias BBB_serial=bbb_serial
 
 # -------------------------------------------------------------------
 # Git stuff
@@ -79,11 +75,6 @@ alias lsnreadable='ls -AFtrd *(^R)'
 alias gs="git status"
 alias ga="git add"
 alias gcm="git commit -m"
-
-#alias git-pull-antigen='pushd ~/dotfiles; git subtree pull --prefix zsh/antigen https://github.com/zsh-users/antigen.git master --squash; popd'
-#alias git-pull-z='pushd ~/.dotfiles; git fetch z master; git subtree pull --prefix .zsh/z z master --squash; popd'
-
-#alias git-pull-all-subtrees='git-pull-oh-my-zsh; git-pull-z'
 
 # -------------------------------------------------------------------
 # Python virtualenv
@@ -116,9 +107,5 @@ alias h='history'
 alias lsofip6='lsof -Pnl +M -i6'
 alias lsofip4='lsof -Pnl +M -i4'
 
+alias reboot='echo "you dont really mean that, do you?"'
 alias fav_commands=history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn
-
-alias monero_mine_cpu_xmrpool='sudo minerd -a cryptonight -o stratum+tcp://xmrpool.io:3333 -u 44pmQCX7wWo8C5y8SFUTdxceToPj4CwFxDotk6tuQu9ihU6ifTsUuTg7whFXKdNnxJAnh7b39fTo51RDJFLm26qvM8WmKTc'
-
-alias monero_mine_cpu_monerohash='sudo minerd -a cryptonight -o stratum+tcp://monerohash.com:3333 -u 44pmQCX7wWo8C5y8SFUTdxceToPj4CwFxDotk6tuQu9ihU6ifTsUuTg7whFXKdNnxJAnh7b39fTo51RDJFLm26qvM8WmKTc'
-
