@@ -34,3 +34,5 @@
 	default = matching
 [pull]
 	ff = only
+[credential]
+	helper = store

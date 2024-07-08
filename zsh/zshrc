@@ -4,6 +4,10 @@ if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
     source /etc/profile.d/vte.sh
 fi
 
+# Environment Settings
+source ~/dotfiles/zsh/config/exports.zsh
+source ~/dotfiles/zsh/config/work.zsh
+
 #Zsh history settings
 source ~/dotfiles/zsh/config/history.zsh
 source ~/dotfiles/zsh/config/setopt.zsh
@@ -27,12 +31,12 @@ source ~/.zplug/init.zsh
 # source ~/dotfiles/zsh/config/theme.zsh
 # zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 # zplug romkatv/powerlevel10k, as:theme, depth:1
-zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
+zplug "spaceship-prompt/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
 
-zplug "zplug/zplug"
+#zplug "zplug/zplug"
 
-zplug "colcon/colcon-core", as:command, use:"python/colcon"
-zplug "colcon/colcon-cmake"
+#zplug "colcon/colcon-core", as:command, use:"python/colcon"
+#zplug "colcon/colcon-cmake", as:plugin
 
 # git
 zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
@@ -40,7 +44,7 @@ zplug "plugins/git", from:oh-my-zsh,  as:command, defer:2
 # python
 zplug "plugins/pip", from:oh-my-zsh, as:command, ignore: oh-my-zsh
 zplug "srijanshetty/zsh-pip-completion"
-zplug "plugins/python", from:oh-my-zsh, as:command, ignore: oh-my-zsh
+#zplug "plugins/python", from:oh-my-zsh, as:command, ignore: oh-my-zsh
 #zplug "virtualenv", from:oh-my-zsh, as:command, ignore: oh-my-zsh
 #zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
 
@@ -52,30 +56,30 @@ zplug "lukechilds/zsh-better-npm-completion"
 # other awesome stuff
 #zplug "trapd00r/LS_COLORS"
 #eval $( dircolors -b $HOME/.zplug/repos/trapd00r/LS_COLORS/LS_COLORS)
-zplug "chrissicool/zsh-256color"
+zplug "chrissicool/zsh-256color", from:github, as:plugin
 zplug "plugins/command-not-found", from:oh-my-zsh, as:plugin, ignore: oh-my-zsh
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 #zplug "trapd00r/zsh-syntax-highlighting-filetypes", defer:4
 
 
-zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-completions", from:github, as:plugin
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=7'
-zplug "zsh-users/zsh-autosuggestions"
-zplug "djui/alias-tips"
+zplug "zsh-users/zsh-autosuggestions", from:github, as:plugin
+zplug "djui/alias-tips", from:github, as:plugin
 
 #live search (peco)
 #zplug "peco/peco",    from:gh-r,    as:command,    use: "linux_amd64.tar.gz" rename-to:peco
 #zplug "jimeh/zsh-peco-history"
 
-zplug "junegunn/fzf-bin", from:gh-r, as:command, use:"*linux*amd64*", rename-to:fzf
+# zplug "junegunn/fzf-bin", from:gh-r, as:command, use:"*linux*amd64*", rename-to:fzf
 
-zplug "so-fancy/diff-so-fancy", as:command, use:"third_party/build_fatpack/diff-so-fancy"
-zplug "denilsonsa/prettyping", as:command, use:"prettyping"
+zplug "so-fancy/diff-so-fancy", from:github, as:command, use:"third_party/build_fatpack/diff-so-fancy"
+zplug "denilsonsa/prettyping", from:github, as:command, use:"prettyping"
 
 
 
 # better ls
-zplug "supercrabtree/k", as:plugin
+# zplug "supercrabtree/k", as:plugin
 
 # install uninstalled plugins
 zplug check || zplug install
@@ -83,6 +87,22 @@ zplug check || zplug install
 # Then, source plugins and add commands to $PATH
 zplug load
 
-# Environment Settings
-source ~/dotfiles/zsh/config/exports.zsh
-source ~/dotfiles/zsh/config/work.zsh
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
+        . "/usr/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
