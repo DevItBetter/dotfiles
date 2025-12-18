@@ -1,0 +1,39 @@
+# -------------------------------------------------------------------
+# Git (oh-my-zsh plugin)
+# -------------------------------------------------------------------
+ohmyzsh/ohmyzsh path:plugins/git
+
+# -------------------------------------------------------------------
+# Python
+# -------------------------------------------------------------------
+ohmyzsh/ohmyzsh path:plugins/pip
+srijanshetty/zsh-pip-completion
+
+# -------------------------------------------------------------------
+# Node.js
+# -------------------------------------------------------------------
+lukechilds/zsh-better-npm-completion
+
+# -------------------------------------------------------------------
+# Shell Enhancements
+# -------------------------------------------------------------------
+chrissicool/zsh-256color
+ohmyzsh/ohmyzsh path:plugins/command-not-found
+
+# Completions (load before compinit)
+zsh-users/zsh-completions path:src kind:fpath
+
+# Autosuggestions
+zsh-users/zsh-autosuggestions
+
+# Alias tips
+djui/alias-tips
+
+# Syntax highlighting (must be loaded last/deferred)
+zsh-users/zsh-syntax-highlighting kind:defer
+
+# -------------------------------------------------------------------
+# Commands (binaries)
+# -------------------------------------------------------------------
+so-fancy/diff-so-fancy kind:path
+denilsonsa/prettyping kind:path
