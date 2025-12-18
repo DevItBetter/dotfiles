@@ -1,0 +1,99 @@
+# Starship Prompt Configuration
+# https://starship.rs/config/
+
+# Timeout for commands executed by starship (ms)
+command_timeout = 1000
+
+# Newline between prompts
+add_newline = true
+
+# -------------------------------------------------------------------
+# Prompt Format
+# -------------------------------------------------------------------
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$golang\
+$docker_context\
+$conda\
+$line_break\
+$character"""
+
+# -------------------------------------------------------------------
+# Character (prompt symbol)
+# -------------------------------------------------------------------
+[character]
+success_symbol = "[>](bold green)"
+error_symbol = "[>](bold red)"
+
+# -------------------------------------------------------------------
+# Directory
+# -------------------------------------------------------------------
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = "bold cyan"
+
+# -------------------------------------------------------------------
+# Git
+# -------------------------------------------------------------------
+[git_branch]
+symbol = ""
+style = "bold purple"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "bold yellow"
+conflicted = "="
+ahead = "^${count}"
+behind = "v${count}"
+diverged = "^${ahead_count}v${behind_count}"
+untracked = "?"
+stashed = "$"
+modified = "!"
+staged = "+"
+renamed = "r"
+deleted = "x"
+
+# -------------------------------------------------------------------
+# Languages
+# -------------------------------------------------------------------
+[python]
+symbol = "py "
+style = "yellow"
+format = '[$symbol$version(\($virtualenv\))]($style) '
+
+[nodejs]
+symbol = "node "
+style = "green"
+format = '[$symbol$version]($style) '
+
+[rust]
+symbol = "rs "
+style = "red"
+format = '[$symbol$version]($style) '
+
+[golang]
+symbol = "go "
+style = "cyan"
+format = '[$symbol$version]($style) '
+
+# -------------------------------------------------------------------
+# Containers
+# -------------------------------------------------------------------
+[docker_context]
+symbol = "docker "
+style = "blue"
+format = '[$symbol$context]($style) '
+
+[conda]
+symbol = "conda "
+style = "green"
+format = '[$symbol$environment]($style) '
