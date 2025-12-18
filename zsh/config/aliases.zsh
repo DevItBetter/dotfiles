@@ -12,7 +12,7 @@ alias pygmentize='nocorrect pygmentize'
 # -------------------------------------------------------------------
 alias -g H='| head'
 alias -g T='| tail'
-alias -g G='| grep'
+alias -g G='| rg'
 alias -g L="| less"
 alias -g M="| most"
 alias -g LL="2>&1 | less"
@@ -33,10 +33,10 @@ alias .....='cd ../../../..'
 # -------------------------------------------------------------------
 # finding stuff
 # -------------------------------------------------------------------
-alias grep='grep --color=auto --exclude-dir=".svn,.git"'
+alias grep='rg --color=auto' #ripgrep instead of grep
 
-alias sgrep='grep -RnH -C 5' #recursive search with context
-alias hgrep="fc -El 0 | grep"
+alias sgrep='rg -RnH -C 5' #recursive search with context
+alias hgrep="fc -El 0 | rg"
 alias k="k -h"
 
 alias duf='du -sh *'
@@ -44,7 +44,7 @@ alias duf='du -sh *'
 alias fn='find . -name' #find by name
 alias fnd='find . -type d -name' #find directories by name
 alias fnf='find . -type f -name' #find fils by name
-alias fna='tar -ztvf xxx.tar.gz |grep yyyy' #find in archive
+alias fna='tar -ztvf xxx.tar.gz |rg yyyy' #find in archive
 
 # -------------------------------------------------------------------
 # show me things
@@ -55,7 +55,7 @@ alias lsdh='ls -aFhl .*' #list hidden directories
 alias l='ls -alh'
 #alias ls='ls -Fh' # Colorize output, add file type indicator, and put sizes in human readable format
 alias ll='ls -Fhl' # Same as above, but in long listing format
-alias tree="ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'"
+alias lstree="ls -R | rg ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'"
 #alias 'dus=du -sckx * | sort -nr' #directories sorted by size
 
 #alias 'wordy=wc -w * | sort | tail -n10' # sort files in current directory by the number of words they contain
@@ -74,7 +74,6 @@ alias lsnreadable='ls -AFtrd *(^R)'
 # -------------------------------------------------------------------
 alias gs="git status"
 alias ga="git add"
-alias gcm="git commit -m"
 
 # -------------------------------------------------------------------
 # Python virtualenv
@@ -86,23 +85,6 @@ alias off="deactivate"
 # -------------------------------------------------------------------
 # Oddball stuff
 # -------------------------------------------------------------------
-#alias display-1-monitor="xrandr --output DP1 --scale 1.5x1.5 --fb 3840x3760 --pos 0x0; \
-#                         xrandr --output eDP1 --scale 1x1 --pos 840x2300"
-
-#alias display-2-monitor="xrandr --output eDP1 --off; \
-#                         xrandr --output DP1 --mode 2560x1440 --scale 1x1 \
-#                                --output DP2 --mode 2560x1440 --scale 1x1 --right-of DP1;  \
-#                         xfconf-query -c xsettings -p /Xft/DPI -s -1; \
-#                         xfconf-query -c xfce4-panel -p /panels/panel-1/mode -s 0; \
-#                         xfconf-query -c xfce4-panel -p /plugins/plugin-23/digital-format -s ''; \
-#                         xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behavior -s 0;"
-
-# alias display-swap="xrandr --output DP1 --right-of DP2;"
-
-
-# Force tmux to use 256 colors
-alias tmux='TERM=screen-256color-bce tmux'
-
 alias h='history'
 alias lsofip6='lsof -Pnl +M -i6'
 alias lsofip4='lsof -Pnl +M -i4'
