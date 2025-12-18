@@ -1,6 +1,6 @@
 [user]
-    name = "Jeff Joltes"
-    email = "jeff.joltes@gmail.com"
+	name = Jeff Joltes
+	email = jeff.joltes@gmail.com
 
 [branch "master"]
     remote = origin
@@ -36,3 +36,9 @@
 	ff = only
 [credential]
 	helper = store
+[include]
+	path = /home/jeffjoltes/.gitconfig.local
+[dotfiles]
+	managed = true
+[core]
+	pager = diff-so-fancy | less --tabs=4 -RFX
