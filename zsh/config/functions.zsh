@@ -77,6 +77,16 @@ function display-ansi-color-chart() {
   echo -e "\e[m"
 }
 
+# Checks if this is executed within a WSL (Windows Subsytem for Linux) environment
+is_wsl() {
+  # Check /proc/version for "Microsoft" (WSL1/WSL2) or "WSL"
+  if grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null; then
+    return 0   # true
+  fi
+  return 1     # false
+}
+
+
 # -------------------------------------------------------------------
 # compressed file expander
 # (from https://github.com/myfreeweb/zshuery/blob/master/zshuery.sh)
