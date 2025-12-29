@@ -8,7 +8,6 @@ fi
 source ~/dotfiles/zsh/config/exports.zsh
 source ~/dotfiles/zsh/config/work.zsh
 
-#Zsh history settings
 source ~/dotfiles/zsh/config/history.zsh
 source ~/dotfiles/zsh/config/setopt.zsh
 source ~/dotfiles/zsh/config/completions.zsh
@@ -17,6 +16,13 @@ source ~/dotfiles/zsh/config/aliases.zsh
 
 # Useful functions
 source ~/dotfiles/zsh/config/functions.zsh
+
+# WSL setup
+if is_wsl; then
+  _cfg="$HOME/dotfiles/zsh/config/windows/wsl2-ssh-agent.zsh"
+  [[ -r "$_cfg" ]] && source "$_cfg"
+  unset _cfg
+fi
 
 # -------------------------------------------------------------------
 # Antidote Plugin Manager
