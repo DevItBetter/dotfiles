@@ -11,21 +11,18 @@ if [ -z "${DOTFILES_DIR:-}" ]; then
   DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 fi
 
-# Color codes for terminal output
+# Colors (only when output is a TTY)
 if [ -t 1 ]; then
-  BLUE='\033[0;34m'
-  GREEN='\033[0;32m'
-  YELLOW='\033[0;33m'
-  RESET='\033[0m'
+  BLUE=$'\033[0;34m'
+  GREEN=$'\033[0;32m'
+  YELLOW=$'\033[0;33m'
+  RESET=$'\033[0m'
 else
-  BLUE=''
-  GREEN=''
-  YELLOW=''
-  RESET=''
+  BLUE='' GREEN='' YELLOW='' RESET=''
 fi
 
 if [ -t 2 ]; then
-  RED='\033[0;31m'
+  RED=$'\033[0;31m'
 else
   RED=''
 fi
