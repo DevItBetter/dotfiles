@@ -158,7 +158,7 @@ setup_gitconfig() {
   fi
   
   # Include local overrides file for machine-specific settings
-  git config --global include.path ~/.gitconfig.local
+  git config --global include.path "$HOME/.gitconfig.local"
   
   # Mark as managed by dotfiles to prevent re-prompting
   git config --global dotfiles.managed true
