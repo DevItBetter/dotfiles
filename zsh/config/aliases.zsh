@@ -67,8 +67,6 @@ alias lsreadable='ls -AFtrd *(R)'
 alias lsnreadable='ls -AFtrd *(^R)'
 # alias nrable=lsnreadable
 
-
-
 # -------------------------------------------------------------------
 # Git stuff
 # -------------------------------------------------------------------
