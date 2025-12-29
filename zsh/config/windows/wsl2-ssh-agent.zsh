@@ -6,8 +6,7 @@ if [[ -n "${SSH_AUTH_SOCK:-}" && -S "$SSH_AUTH_SOCK" ]]; then
   return 0
 fi
 
-# expected output:
-# SSH_AUTH_SOCK=/some/path.sock; export SSH_AUTH_SOCK;
+# expected output: SSH_AUTH_SOCK=/some/path.sock; export SSH_AUTH_SOCK;
 if [[ -x "$wsl2_ssh_agent_bin" ]]; then
   output=""
   if ! output="$("$wsl2_ssh_agent_bin" 2>&1)"; then
