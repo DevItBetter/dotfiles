@@ -7,17 +7,32 @@ set -e
 
 DOTFILES_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo ""
-echo "==> Setting up dotfiles from: $DOTFILES_DIR"
-echo ""
+printf '\n==> Setting up dotfiles from: %s\n\n' "$DOTFILES_DIR"
 
 # -------------------------------------------------------------------
 # Helper functions
 # -------------------------------------------------------------------
-info() { echo -e "\033[0;34m[INFO]\033[0m $1"; }
-success() { echo -e "\033[0;32m[OK]\033[0m $1"; }
-warn() { echo -e "\033[0;33m[WARN]\033[0m $1"; }
-error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
+if [ -t 1 ]; then
+  BLUE='\033[0;34m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[0;33m'
+  RESET='\033[0m'
+else
+  BLUE=''
+  GREEN=''
+  YELLOW=''
+  RESET=''
+fi
+
+if [ -t 2 ]; then
+  RED='\033[0;31m'
+else
+  RED=''
+fi
+info()    { printf '%s[INFO]%s %s\n'  "$BLUE"  "$RESET" "$*"; }
+success() { printf '%s[OK]%s %s\n'    "$GREEN" "$RESET" "$*"; }
+warn()    { printf '%s[WARN]%s %s\n'  "$YELLOW" "$RESET" "$*"; }
+error()   { printf '%s[ERROR]%s %s\n' "$RED"   "$RESET" "$*" >&2; }
 
 link_file() {
   local src="$1" dst="$2"
@@ -39,17 +54,17 @@ link_file() {
 # -------------------------------------------------------------------
 detect_package_manager() {
   if command -v apt-get &>/dev/null; then
-    echo "apt"
+    printf '%s\n' "apt"
   elif command -v dnf &>/dev/null; then
-    echo "dnf"
+    printf '%s\n' "dnf"
   elif command -v yum &>/dev/null; then
-    echo "yum"
+    printf '%s\n' "yum"
   elif command -v pacman &>/dev/null; then
-    echo "pacman"
+    printf '%s\n' "pacman"
   elif command -v brew &>/dev/null; then
-    echo "brew"
+    printf '%s\n' "brew"
   else
-    echo "unknown"
+    printf '%s\n' "unknown"
   fi
 }
 
@@ -105,7 +120,7 @@ if [ "$current_shell" != "zsh" ]; then
   # Add to /etc/shells if not present
   if ! grep -q "$zsh_path" /etc/shells 2>/dev/null; then
     info "Adding $zsh_path to /etc/shells..."
-    echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+    printf '%s\n' "$zsh_path" | sudo tee -a /etc/shells >/dev/null
   fi
   
   chsh -s "$zsh_path"
@@ -136,10 +151,10 @@ setup_gitconfig() {
   
   # If no user.email configured, prompt for git credentials
   if [ -z "$(git config --global --get user.email)" ]; then
-    echo ""
+    printf '\n'
     read -rp "  What is your git author name? " user_name
     read -rp "  What is your git author email? " user_email
-    echo ""
+    printf '\n'
     
     git config --global user.name "$user_name"
     git config --global user.email "$user_email"
@@ -201,10 +216,4 @@ success "Plugin cache cleared"
 # -------------------------------------------------------------------
 # Summary
 # -------------------------------------------------------------------
-echo ""
-echo "==> Setup complete!"
-echo ""
-echo "Next steps:"
-echo "  1. Log out and back in (or run 'zsh') to use zsh"
-echo "  2. Customize Starship: ~/.config/starship.toml"
-echo ""
+printf '\n==> Setup complete!\n\n'
