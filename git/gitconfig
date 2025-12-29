@@ -37,7 +37,7 @@
 [credential]
 	helper = store
 [include]
-	path = /home/jeffjoltes/.gitconfig.local
+	path = ~/.gitconfig.local
 [dotfiles]
 	managed = true
 [core]
