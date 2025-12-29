@@ -72,9 +72,9 @@ function display-ansi-color-chart() {
   local i
   local col=$((${1:-3} * 8))
   for i in {0..255}; do
-    echo -e "\e[38;05;${i}m $i: This is a color test"
+    print "\e[38;05;${i}m $i: This is a color test"
   done | column -c$col
-  echo -e "\e[m"
+  print "\e[m"
 }
 
 # Checks if this is executed within a WSL (Windows Subsytem for Linux) environment
@@ -108,10 +108,10 @@ ex() {
           *.Z) uncompress $1;;
           *.7z) 7z x $1;;
           *.dmg) hdiutul mount $1;; # mount OS X disk images
-          *) echo "'$1' cannot be extracted via >ex<";;
+          *) print -u2 "'$1' cannot be extracted via >ex<";;
     esac
     else
-        echo "'$1' is not a valid file"
+        print -u2 "'$1' is not a valid file"
     fi
 }
 
@@ -123,8 +123,8 @@ any() {
     emulate -L zsh
     unsetopt KSH_ARRAYS
     if [[ -z "$1" ]] ; then
-        echo "any - grep for process(es) by keyword" >&2
-        echo "Usage: any " >&2 ; return 1
+        print -u2 "any - grep for process(es) by keyword"
+        print -u2 "Usage: any " ; return 1
     else
         ps xauwww | grep -i --color=auto "[${1[1]}]${1[2,-1]}"
     fi
@@ -134,7 +134,7 @@ any() {
 # display a neatly formatted path
 # -------------------------------------------------------------------
 path() {
-  echo $PATH | tr ":" "\n" | \
+  print $PATH | tr ":" "\n" | \
     awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
            sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
            sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
@@ -148,7 +148,7 @@ path() {
 # nice mount (http://catonmat.net/blog/another-ten-one-liners-from-commandlingfu-explained)
 # displays mounted drive information in a nicely formatted manner
 # -------------------------------------------------------------------
-function nicemount() { (echo "DEVICE PATH TYPE FLAGS" && mount | awk '$2="";1') | column -t ; }
+function nicemount() { (print "DEVICE PATH TYPE FLAGS" && mount | awk '$2="";1') | column -t ; }
 
 # -------------------------------------------------------------------
 # myIP address
@@ -172,7 +172,7 @@ i() { cd "$(cat "$HOME/.save_dir")" ; }
 # -------------------------------------------------------------------
 function console () {
   if [[ $# > 0 ]]; then
-    query=$(echo "$*"|tr -s ' ' '|')
+    query=$(print "$*"|tr -s ' ' '|')
     tail -f /var/log/system.log|grep -i --color=auto -E "$query"
   else
     tail -f /var/log/system.log
@@ -185,7 +185,7 @@ function console () {
 # -------------------------------------------------------------------
 givedef() {
   if [[ $# -ge 2 ]] then
-    echo "givedef: too many arguments" >&2
+    print -u2 "givedef: too many arguments"
     return 1
   else
     curl "dict://dict.org/d:$1"
