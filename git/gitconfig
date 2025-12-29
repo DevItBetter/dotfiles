@@ -38,6 +38,8 @@
 	helper = store
 [include]
 	path = ~/.gitconfig.local
+[includeIf "gitdir:~/dev/gbl/**"]
+  path = ~/.gitconfig.gbl
 [dotfiles]
 	managed = true
 [core]
