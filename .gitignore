@@ -180,6 +180,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!script/lib/
 lib64/
 parts/
 sdist/
