@@ -1,5 +1,8 @@
 #things to ignore
 
+# Dotfile specific ignores
+zsh/config/work.zsh
+
 ### C ###
 # Object files
 *.o
