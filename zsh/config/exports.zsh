@@ -24,3 +24,7 @@ export LS_COLORS
 #export NVM_NO_USE=true #stop NVM from using default node version on load
 #export NVM_LAZY_LOAD=true #lazy load nvm
 #export CMD_ENV=linux
+
+# Bun (JavaScript runtime and package manager)
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
