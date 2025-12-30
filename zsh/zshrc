@@ -14,7 +14,9 @@ fi
 
 # Environment Settings
 source "$HOME/dotfiles/zsh/config/exports.zsh"
-source "$HOME/dotfiles/zsh/config/work.zsh"
+
+[[ -e "$HOME/dotfiles/zsh/config/work.zsh" ]] && source "$HOME/dotfiles/zsh/config/work.zsh"
+[[ -e "$HOME/dotfiles/zsh/config/local.zsh" ]] && source "$HOME/dotfiles/zsh/config/local.zsh"
 
 source "$HOME/dotfiles/zsh/config/history.zsh"
 source "$HOME/dotfiles/zsh/config/setopt.zsh"
