@@ -35,8 +35,6 @@ export NVM_DIR="$HOME/.nvm"
 # Initialize mise after all changes to PATH and environment variables have been made
 if command -v mise &>/dev/null; then
   eval "$(mise activate zsh)"
-else
-  echo "mise not found"
 fi
 
 source "$HOME/dotfiles/zsh/config/history.zsh"
