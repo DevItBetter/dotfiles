@@ -32,6 +32,7 @@ symbol = " "
 
 [directory]
 read_only = " 󰌾"
+truncation_length = 3
 
 [docker_context]
 symbol = " "
