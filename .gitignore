@@ -4,6 +4,8 @@
 zsh/config/work.zsh
 zsh/config/local.zsh
 
+*.code-workspace
+
 ### C ###
 # Object files
 *.o
