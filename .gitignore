@@ -2,6 +2,7 @@
 
 # Dotfile specific ignores
 zsh/config/work.zsh
+zsh/config/local.zsh
 
 ### C ###
 # Object files
