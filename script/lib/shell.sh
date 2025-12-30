@@ -79,19 +79,6 @@ install_mise() {
   fi
 }
 
-# Install bun (JavaScript runtime and package manager)
-install_bun() {
-  info "Setting up bun..."
-
-  if command -v bun &>/dev/null; then
-    success "bun already installed: $(bun --version)"
-  else
-    info "Installing bun..."
-    curl -fsSL https://bun.sh/install | bash
-    success "bun installed"
-  fi
-}
-
 # Clear plugin cache (will regenerate on first shell)
 clear_plugin_cache() {
   info "Clearing plugin cache (will regenerate on next shell)..."

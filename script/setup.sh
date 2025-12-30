@@ -26,7 +26,6 @@ main() {
   symlink_dotfiles
   configure_git
   install_mise
-  install_bun
   install_antidote
   install_starship
   clear_plugin_cache

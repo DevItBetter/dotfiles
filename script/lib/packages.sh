@@ -15,7 +15,6 @@ BASE_PACKAGES=(
   fzf
   tmux
   shellcheck
-  unzip
 )
 
 # Detect the system's package manager
