@@ -66,6 +66,19 @@ install_starship() {
   fi
 }
 
+# Install mise (runtime version manager)
+install_mise() {
+  info "Setting up mise..."
+
+  if command -v mise &>/dev/null; then
+    success "mise already installed: $(mise --version | head -1)"
+  else
+    info "Installing mise..."
+    curl https://mise.run | sh
+    success "mise installed"
+  fi
+}
+
 # Clear plugin cache (will regenerate on first shell)
 clear_plugin_cache() {
   info "Clearing plugin cache (will regenerate on next shell)..."

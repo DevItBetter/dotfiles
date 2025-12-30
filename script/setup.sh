@@ -25,6 +25,7 @@ main() {
   install_baseline_packages
   symlink_dotfiles
   configure_git
+  install_mise
   install_antidote
   install_starship
   clear_plugin_cache

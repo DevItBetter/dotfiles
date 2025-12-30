@@ -4,6 +4,14 @@ if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
     source /etc/profile.d/vte.sh
 fi
 
+# -------------------------------------------------------------------
+# mise (Runtime Version Manager)
+# -------------------------------------------------------------------
+# Initialize mise early so it can manage PATH and environment variables
+if command -v mise &>/dev/null; then
+  eval "$(mise activate zsh)"
+fi
+
 # Environment Settings
 source "$HOME/dotfiles/zsh/config/exports.zsh"
 source "$HOME/dotfiles/zsh/config/work.zsh"
