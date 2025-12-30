@@ -4,19 +4,40 @@ if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
     source /etc/profile.d/vte.sh
 fi
 
-# -------------------------------------------------------------------
-# mise (Runtime Version Manager)
-# -------------------------------------------------------------------
-# Initialize mise early so it can manage PATH and environment variables
-if command -v mise &>/dev/null; then
-  eval "$(mise activate zsh)"
-fi
-
 # Environment Settings
 source "$HOME/dotfiles/zsh/config/exports.zsh"
 
 [[ -e "$HOME/dotfiles/zsh/config/work.zsh" ]] && source "$HOME/dotfiles/zsh/config/work.zsh"
 [[ -e "$HOME/dotfiles/zsh/config/local.zsh" ]] && source "$HOME/dotfiles/zsh/config/local.zsh"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
+        . "/usr/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# -------------------------------------------------------------------
+# mise (Runtime Version Manager)
+# -------------------------------------------------------------------
+# Initialize mise after all changes to PATH and environment variables have been made
+if command -v mise &>/dev/null; then
+  eval "$(mise activate zsh)"
+else
+  echo "mise not found"
+fi
 
 source "$HOME/dotfiles/zsh/config/history.zsh"
 source "$HOME/dotfiles/zsh/config/setopt.zsh"
@@ -41,9 +62,6 @@ fi
 [[ -e "${ZDOTDIR:-$HOME}/.antidote" ]] ||
   git clone https://github.com/mattmc3/antidote.git "${ZDOTDIR:-$HOME}/.antidote"
 
-# Autosuggestions config (before loading plugin)
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=7'
-
 # Source antidote
 source "${ZDOTDIR:-$HOME}/.antidote/antidote.zsh"
 
@@ -59,23 +77,3 @@ source "${zsh_plugins_cache}"
 # Starship Prompt
 # -------------------------------------------------------------------
 eval "$(starship init zsh)"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
-        . "/usr/etc/profile.d/conda.sh"
-    else
-        export PATH="/usr/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
