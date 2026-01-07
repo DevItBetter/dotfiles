@@ -87,5 +87,4 @@ alias h='history'
 alias lsofip6='lsof -Pnl +M -i6'
 alias lsofip4='lsof -Pnl +M -i4'
 
-alias reboot='print "you dont really mean that, do you?"'
 alias fav_commands=history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn
