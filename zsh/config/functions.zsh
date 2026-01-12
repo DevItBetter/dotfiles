@@ -192,3 +192,51 @@ givedef() {
   fi
 }
 
+# -------------------------------------------------------------------
+# create a bare git clone for worktree workflow
+# Usage: git-bare-clone <repo-url> [directory]
+# -------------------------------------------------------------------
+git-bare-clone() {
+  if [[ -z "$1" ]]; then
+    print -u2 "git-bare-clone - create bare git clone for worktrees"
+    print -u2 "Usage: git-bare-clone <repo-url> [directory]"
+    return 1
+  fi
+
+  local url="$1"
+  local dir="$2"
+
+  # extract repo name from url if directory not provided
+  if [[ -z "$dir" ]]; then
+    # handle both git@host:user/repo and https://host/user/repo formats
+    local name="${url##*/}"      # get last segment (repo.git or repo)
+    name="${name%.git}"          # strip .git suffix if present
+    dir="${name}.git"
+  else
+    # ensure directory ends with .git
+    [[ "$dir" != *.git ]] && dir="${dir}.git"
+  fi
+
+  # check if directory already exists
+  if [[ -d "$dir" ]]; then
+    print -u2 "git-bare-clone: directory '$dir' already exists"
+    return 1
+  fi
+
+  # create directory structure
+  mkdir -p "$dir" || return 1
+
+  # clone bare repository into .bare
+  if ! git clone --bare "$url" "$dir/.bare"; then
+    print -u2 "git-bare-clone: clone failed, cleaning up"
+    rm -rf "$dir"
+    return 1
+  fi
+
+  # create .git file pointing to .bare
+  echo "gitdir: ./.bare" > "$dir/.git"
+
+  print "Created bare repository at: $dir"
+  return 0
+}
+
