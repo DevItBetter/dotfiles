@@ -233,6 +233,9 @@ git-bare-clone() {
     return 1
   fi
 
+  # configure remote origin fetch to enable fetching remote branches
+  git -C "$dir/.bare" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+
   # create .git file pointing to .bare
   echo "gitdir: ./.bare" > "$dir/.git"
 
