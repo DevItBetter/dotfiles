@@ -5,6 +5,7 @@ alias mv='nocorrect mv'
 alias cp='nocorrect cp'
 alias mkdir='nocorrect mkdir'
 alias git='nocorrect git'
+alias bun='nocorrect bun'
 alias pygmentize='nocorrect pygmentize'
 
 # -------------------------------------------------------------------
