@@ -7,6 +7,7 @@ alias mkdir='nocorrect mkdir'
 alias git='nocorrect git'
 alias bun='nocorrect bun'
 alias pygmentize='nocorrect pygmentize'
+alias bun='nocorrect bun'
 
 # -------------------------------------------------------------------
 # globals are awesome
