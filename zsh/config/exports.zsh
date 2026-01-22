@@ -16,6 +16,9 @@ export LS_COLORS
 
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=7'
 
+# Add user local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # Virtual Environment Stuff
 #export WORKON_HOME=$HOME/.virtualenvs
 #export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
