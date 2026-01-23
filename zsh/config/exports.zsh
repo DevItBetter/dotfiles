@@ -23,8 +23,3 @@ export PATH="$HOME/.local/bin:$PATH"
 #export WORKON_HOME=$HOME/.virtualenvs
 #export VIRTUALENVWRAPPER_SCRIPT=/usr/local/bin/virtualenvwrapper.sh
 #source /usr/local/bin/virtualenvwrapper.sh
-
-# Node
-#export NVM_NO_USE=true #stop NVM from using default node version on load
-#export NVM_LAZY_LOAD=true #lazy load nvm
-#export CMD_ENV=linux
