@@ -9,6 +9,7 @@ source "$HOME/dotfiles/zsh/config/exports.zsh"
 
 [[ -e "$HOME/dotfiles/zsh/config/work.zsh" ]] && source "$HOME/dotfiles/zsh/config/work.zsh"
 [[ -e "$HOME/dotfiles/zsh/config/local.zsh" ]] && source "$HOME/dotfiles/zsh/config/local.zsh"
+source "$HOME/dotfiles/zsh/config/ai_cli_optional.zsh"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
