@@ -1,0 +1,18 @@
+---
+description: Always prepend nocorrect to shell commands (user preference)
+alwaysApply: true
+---
+
+# Shell Commands
+
+Always prepend `nocorrect` to shell commands before execution.
+
+## Examples
+
+```bash
+# ❌ BAD
+git status
+
+# ✅ GOOD
+nocorrect git status
+```

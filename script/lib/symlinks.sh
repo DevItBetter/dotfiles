@@ -20,5 +20,9 @@ symlink_dotfiles() {
   # Starship config
   mkdir -p "$HOME/.config"
   link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
+
+  # Cursor rules
+  mkdir -p "$HOME/.cursor"
+  link_file "$DOTFILES_DIR/cursor/rules" "$HOME/.cursor/rules"
 }
 
