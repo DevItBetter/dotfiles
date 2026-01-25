@@ -518,6 +518,3 @@ bundled_plugins.zsh
 
 .nvmrc
 .project
-# Machine-local opt-in for optional AI CLI tooling
-.config/dotfiles/enable_ai_cli_side
-.config/dotfiles/ai_cli_side.env
