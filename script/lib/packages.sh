@@ -14,6 +14,7 @@ BASE_PACKAGES=(
   curl
   fzf
   tmux
+  alacritty
   shellcheck
   perl-time-hires
 )

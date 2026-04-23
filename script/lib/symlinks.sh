@@ -21,6 +21,10 @@ symlink_dotfiles() {
   mkdir -p "$HOME/.config"
   link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
 
+   # User-local executables
+   mkdir -p "$HOME/.local/bin"
+   link_file "$DOTFILES_DIR/tmux/bin/tmux-pane-bg" "$HOME/.local/bin/tmux-pane-bg"
+
   # Cursor rules
   mkdir -p "$HOME/.cursor"
   link_file "$DOTFILES_DIR/cursor/rules" "$HOME/.cursor/rules"

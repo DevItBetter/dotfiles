@@ -1,0 +1,227 @@
+#!/bin/sh
+# Set or reset the current tmux pane background with a numbered palette.
+
+set -eu
+
+SCRIPT_NAME=${0##*/}
+PANE_TARGET=${TMUX_PANE:-}
+ESC=$(printf '\033')
+RESET_STYLE=${ESC}[0m
+PREVIEW_FG_RED=245
+PREVIEW_FG_GREEN=247
+PREVIEW_FG_BLUE=250
+PALETTE=$(cat <<'EOF'
+1|midnight|#112244|17|34|68
+2|forest|#123524|18|53|36
+3|lagoon|#113344|17|51|68
+4|aubergine|#332255|51|34|85
+5|ember|#442222|68|34|34
+6|merlot|#4A2236|74|34|54
+7|moss|#24361F|36|54|31
+8|bronze|#3A2F1F|58|47|31
+9|slate|#1D2A36|29|42|54
+10|indigo|#202A4A|32|42|74
+11|pine|#183228|24|50|40
+12|iron|#2B2F36|43|47|54
+EOF
+)
+
+print_reset_entry() {
+  printf '%s\n' '   0) reset      default     tmux background'
+}
+
+find_palette_entry() {
+  selected=$1
+
+  while IFS='|' read -r number name hex red green blue; do
+    [ "$number" = "$selected" ] || continue
+    printf '%s|%s|%s|%s|%s|%s\n' "$number" "$name" "$hex" "$red" "$green" "$blue"
+    return 0
+  done <<EOF
+$PALETTE
+EOF
+
+  return 1
+}
+
+normalize_hex() {
+  value=$1
+
+  case "$value" in
+    \#??????)
+      hex=$value
+      ;;
+    ??????)
+      hex="#$value"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  case "$hex" in
+    \#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])
+      printf '%s\n' "$hex"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+print_palette_row() {
+  number=$1
+  name=$2
+  hex=$3
+  red=$4
+  green=$5
+  blue=$6
+  bg_style="${ESC}[48;2;${red};${green};${blue}m"
+  fg_style="${ESC}[38;2;${PREVIEW_FG_RED};${PREVIEW_FG_GREEN};${PREVIEW_FG_BLUE}m"
+
+  printf '  %2s) %-10s %-10s  %s%s  sample pane background  %s\n' \
+    "$number" "$name" "$hex" "$bg_style" "$fg_style" "$RESET_STYLE"
+}
+
+print_preview_row() {
+  number=$1
+  name=$2
+  hex=$3
+  red=$4
+  green=$5
+  blue=$6
+  bg_style="${ESC}[48;2;${red};${green};${blue}m"
+  fg_style="${ESC}[38;2;${PREVIEW_FG_RED};${PREVIEW_FG_GREEN};${PREVIEW_FG_BLUE}m"
+
+  printf '  %2s) %-10s %-10s  %s%s  sample pane background  %s\n' \
+    "$number" "$name" "$hex" "$bg_style" "$fg_style" "$RESET_STYLE"
+}
+
+print_palette() {
+  printf '%s\n' 'Choose a tmux pane background color:'
+  print_reset_entry
+
+  while IFS='|' read -r number name hex red green blue; do
+    print_palette_row "$number" "$name" "$hex" "$red" "$green" "$blue"
+  done <<EOF
+$PALETTE
+EOF
+}
+
+print_preview() {
+  printf '%s\n' 'tmux pane background preview:'
+  print_reset_entry
+
+  while IFS='|' read -r number name hex red green blue; do
+    print_preview_row "$number" "$name" "$hex" "$red" "$green" "$blue"
+  done <<EOF
+$PALETTE
+EOF
+
+  printf '%s\n' ''
+  printf '%s\n' 'Use a number or an explicit hex value:'
+  printf '  %s 2\n' "$SCRIPT_NAME"
+  printf '  %s \#224466\n' "$SCRIPT_NAME"
+}
+
+resolve_selection() {
+  selected=$1
+
+  case "$selected" in
+    0|reset|default)
+      printf '%s|%s\n' 'default' 'default'
+      return 0
+      ;;
+  esac
+
+  entry=$(find_palette_entry "$selected") || true
+  if [ -n "${entry:-}" ]; then
+    name_and_rest=${entry#*|}
+    name=${name_and_rest%%|*}
+    hex_and_rest=${name_and_rest#*|}
+    hex=${hex_and_rest%%|*}
+    printf '%s|%s\n' "$name" "$hex"
+    return 0
+  fi
+
+  hex=$(normalize_hex "$selected") || return 1
+  printf '%s|%s\n' 'custom' "$hex"
+}
+
+apply_color() {
+  style=$1
+
+  if [ -z "$PANE_TARGET" ]; then
+    printf '%s\n' "$SCRIPT_NAME: must be run inside tmux (TMUX_PANE is not set)" >&2
+    exit 1
+  fi
+
+  tmux select-pane -P "bg=$style" -t "$PANE_TARGET"
+
+  if [ "$style" = "default" ]; then
+    tmux display-message "Pane background reset to default"
+  else
+    tmux display-message "Pane background set to $style"
+  fi
+}
+
+usage() {
+  cat <<EOF
+Usage:
+  $SCRIPT_NAME           # interactive prompt with color examples
+  $SCRIPT_NAME list      # show numbered colors
+  $SCRIPT_NAME preview   # show a swatch for each color
+  $SCRIPT_NAME '#224466' # apply an exact color
+  $SCRIPT_NAME reset     # restore default background
+  $SCRIPT_NAME <number>  # apply a numbered color (0-12)
+EOF
+}
+
+if [ "$#" -eq 0 ]; then
+  print_preview
+  printf '\nEnter selection [0-12 or hex]: '
+  IFS= read -r selection
+else
+  selection=$1
+fi
+
+if [ "$selection" = "truecolor" ] || [ "$selection" = "rgb" ] || [ "$selection" = "24bit" ]; then
+  if [ "$#" -ge 2 ]; then
+    selection=$2
+  else
+    selection='preview'
+  fi
+fi
+
+case "$selection" in
+  list|-l|--list)
+    print_palette
+    exit 0
+    ;;
+  preview|examples|sample|samples)
+    print_preview
+    exit 0
+    ;;
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+selection_label='default'
+style='default'
+
+selection_details=$(resolve_selection "$selection") || {
+  printf '%s\n\n' "$SCRIPT_NAME: invalid selection: $selection" >&2
+  usage >&2
+  exit 1
+}
+
+selection_label=${selection_details%%|*}
+style=${selection_details#*|}
+
+apply_color "$style"
+
+if [ "$style" != "default" ]; then
+  printf 'Applied %s (%s) to %s\n' "$selection_label" "$style" "$PANE_TARGET"
+fi
