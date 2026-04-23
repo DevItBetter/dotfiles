@@ -40,6 +40,7 @@ source "$HOME/dotfiles/zsh/config/history.zsh"
 source "$HOME/dotfiles/zsh/config/setopt.zsh"
 source "$HOME/dotfiles/zsh/config/completions.zsh"
 source "$HOME/dotfiles/zsh/config/bindkeys.zsh"
+source "$HOME/dotfiles/zsh/config/fzf.zsh"
 source "$HOME/dotfiles/zsh/config/aliases.zsh"
 
 # Useful functions
