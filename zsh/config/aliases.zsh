@@ -35,7 +35,8 @@ alias .....='cd ../../../..'
 # -------------------------------------------------------------------
 # finding stuff
 # -------------------------------------------------------------------
-alias grep='rg --color=auto' #ripgrep instead of grep
+alias grep='grep --color=auto --exclude-dir=".svn,.git"'
+alias rg='rg --color=auto'
 
 alias sgrep='rg -RnH -C 5' #recursive search with context
 alias hgrep="fc -El 0 | rg"
