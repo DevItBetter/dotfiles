@@ -1,3 +1,6 @@
 [user]
     name = Jeff Joltes
     email = jeff@gearboxlogic.com
+
+[url "git@github-gbl:Gearbox-Logic/"]
+    insteadOf = git@github.com:Gearbox-Logic/
