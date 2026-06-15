@@ -38,6 +38,10 @@
 	helper = store
 [include]
 	path = ~/.gitconfig.local
+[url "git@github-personal:"]
+	insteadOf = git@github.com:
+[url "ssh://git@github-personal/"]
+	insteadOf = ssh://git@github.com/
 [includeIf "gitdir:~/dev/gbl/**"]
 	path = ~/.gitconfig.gbl
 [dotfiles]
@@ -48,4 +52,3 @@
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
 	helper = !/usr/bin/gh auth git-credential
-

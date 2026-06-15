@@ -4,3 +4,5 @@
 
 [url "git@github-gbl:Gearbox-Logic/"]
     insteadOf = git@github.com:Gearbox-Logic/
+[url "ssh://git@github-gbl/Gearbox-Logic/"]
+    insteadOf = ssh://git@github.com/Gearbox-Logic/
