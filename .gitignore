@@ -3,6 +3,7 @@
 # Dotfile specific ignores
 zsh/config/work.zsh
 zsh/config/local.zsh
+fonts/.uuid
 
 *.code-workspace
 
