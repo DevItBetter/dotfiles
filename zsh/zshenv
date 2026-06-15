@@ -1,0 +1,4 @@
+# Minimal environment for every zsh invocation. Keep this file quiet.
+typeset -U path PATH
+path=("$HOME/.local/bin" "$HOME/.local/share/mise/shims" $path)
+export PATH

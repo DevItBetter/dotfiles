@@ -12,6 +12,7 @@ symlink_dotfiles() {
   info "Creating symlinks..."
 
   link_file "$DOTFILES_DIR/fonts" "$HOME/.fonts"
+  link_file "$DOTFILES_DIR/zsh/zshenv" "$HOME/.zshenv"
   link_file "$DOTFILES_DIR/zsh/zshrc" "$HOME/.zshrc"
   link_file "$DOTFILES_DIR/git/gitconfig" "$HOME/.gitconfig"
   link_file "$DOTFILES_DIR/git/gitconfig.gbl" "$HOME/.gitconfig.gbl"
@@ -33,4 +34,3 @@ symlink_dotfiles() {
   mkdir -p "$HOME/.cursor"
   link_file "$DOTFILES_DIR/cursor/rules" "$HOME/.cursor/rules"
 }
-

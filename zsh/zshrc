@@ -26,15 +26,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# -------------------------------------------------------------------
-# mise (Runtime Version Manager)
-# -------------------------------------------------------------------
-# Initialize mise after all changes to PATH and environment variables have been made
-if command -v mise &>/dev/null; then
-  # eval "$(mise activate zsh)"
-  echo "adding mise shims to PATH"
-  export PATH="$HOME/.local/share/mise/shims:$PATH"
-fi
+# mise shims are added in ~/.zshenv so all zsh invocations can find them.
 
 source "$HOME/dotfiles/zsh/config/history.zsh"
 source "$HOME/dotfiles/zsh/config/setopt.zsh"
@@ -75,4 +67,3 @@ source "${zsh_plugins_cache}"
 # Starship Prompt
 # -------------------------------------------------------------------
 eval "$(starship init zsh)"
-export PATH="$HOME/.local/bin:$PATH"
