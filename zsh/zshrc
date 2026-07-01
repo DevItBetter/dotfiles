@@ -27,6 +27,9 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 # mise shims are added in ~/.zshenv so all zsh invocations can find them.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 
 source "$HOME/dotfiles/zsh/config/history.zsh"
 source "$HOME/dotfiles/zsh/config/setopt.zsh"
