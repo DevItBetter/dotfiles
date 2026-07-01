@@ -1,0 +1,9 @@
+# Optional SSH host for machines that use a separate GitHub key for work.
+# Personal-only machines can keep using github.com directly and do not need
+# this entry.
+
+Host github-work
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_work
+    IdentitiesOnly yes

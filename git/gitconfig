@@ -38,17 +38,7 @@
 	helper = store
 [include]
 	path = ~/.gitconfig.local
-[url "git@github-personal:"]
-	insteadOf = git@github.com:
-[url "ssh://git@github-personal/"]
-	insteadOf = ssh://git@github.com/
-[includeIf "gitdir:~/dev/gbl/**"]
-	path = ~/.gitconfig.gbl
 [dotfiles]
 	managed = true
 [core]
 	pager = diff-so-fancy | less --tabs=4 -RFX
-[credential "https://github.com"]
-	helper = !/usr/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper = !/usr/bin/gh auth git-credential

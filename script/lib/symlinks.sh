@@ -15,7 +15,6 @@ symlink_dotfiles() {
   link_file "$DOTFILES_DIR/zsh/zshenv" "$HOME/.zshenv"
   link_file "$DOTFILES_DIR/zsh/zshrc" "$HOME/.zshrc"
   link_file "$DOTFILES_DIR/git/gitconfig" "$HOME/.gitconfig"
-  link_file "$DOTFILES_DIR/git/gitconfig.gbl" "$HOME/.gitconfig.gbl"
   link_file "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
 
   # Starship config

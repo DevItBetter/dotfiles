@@ -1,0 +1,12 @@
+# Machine-local git overrides.
+#
+# This file is optional. The tracked ~/.gitconfig already defaults to your
+# personal GitHub identity and works with a single SSH key on github.com.
+#
+# Use this file only on machines that need extra GitHub identities or
+# machine-specific author settings.
+
+# Example: route a work org through a dedicated SSH host and identity file.
+#
+# [includeIf "gitdir:~/dev/work/**"]
+#     path = ~/.gitconfig.work

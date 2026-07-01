@@ -1,0 +1,13 @@
+# Optional work-specific overrides for machines that use multiple GitHub SSH
+# keys. Include this file from ~/.gitconfig.local on the machines that need it.
+
+[user]
+    name = Jeff Joltes
+    email = jeff@gearboxlogic.com
+
+# Example: rewrite a specific org to the github-work SSH host.
+#
+# [url "git@github-work:Gearbox-Logic/"]
+#     insteadOf = git@github.com:Gearbox-Logic/
+# [url "ssh://git@github-work/Gearbox-Logic/"]
+#     insteadOf = ssh://git@github.com/Gearbox-Logic/
