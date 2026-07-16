@@ -25,6 +25,7 @@ main() {
   install_baseline_packages
   symlink_dotfiles
   configure_git
+  install_tpm
   install_mise
   install_mise_tools
   install_antidote

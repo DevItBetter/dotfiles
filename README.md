@@ -26,3 +26,7 @@ This repo includes a generic opt-in hook that does nothing by default. To enable
      - `AI_CLI_SIDE_DIR=/path/to/ai-cli-repo`
 
 When enabled, the hook adds `$AI_CLI_SIDE_DIR/bin` to PATH. If the bin dir is missing but an install script exists, it runs the install script with `--no-symlink`.
+
+## tmux plugins
+
+The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.

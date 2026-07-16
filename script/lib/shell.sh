@@ -76,10 +76,26 @@ install_mise() {
   fi
 }
 
+# Install TPM (tmux plugin manager)
+install_tpm() {
+  local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+  info "Setting up TPM..."
+
+  if [ -d "$tpm_dir/.git" ]; then
+    success "TPM already installed"
+  elif [ -e "$tpm_dir" ]; then
+    warn "TPM path exists but is not a git checkout: $tpm_dir"
+  else
+    mkdir -p "$(dirname "$tpm_dir")"
+    git clone --depth=1 https://github.com/tmux-plugins/tpm "$tpm_dir"
+    success "TPM installed"
+  fi
+}
+
 # Clear plugin cache (will regenerate on first shell)
 clear_plugin_cache() {
   info "Clearing plugin cache (will regenerate on next shell)..."
   rm -f "$HOME/.zsh_plugins.zsh"
   success "Plugin cache cleared"
 }
-
