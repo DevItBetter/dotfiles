@@ -30,3 +30,5 @@ When enabled, the hook adds `$AI_CLI_SIDE_DIR/bin` to PATH. If the bin dir is mi
 ## tmux plugins
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.
+
+The tmux config uses `tmux-resurrect` and `tmux-continuum` to save sessions every 15 minutes and restore them when tmux starts.
