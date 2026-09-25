@@ -26,8 +26,8 @@ main() {
   symlink_dotfiles
   configure_git
   install_mise
+  install_mise_tools
   install_antidote
-  install_starship
   clear_plugin_cache
   set_default_shell_zsh
 

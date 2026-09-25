@@ -17,6 +17,10 @@ symlink_dotfiles() {
   link_file "$DOTFILES_DIR/git/gitconfig" "$HOME/.gitconfig"
   link_file "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
 
+  # mise global tool config
+  mkdir -p "$HOME/.config/mise"
+  link_file "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
+
   # Starship config
   mkdir -p "$HOME/.config"
   link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"

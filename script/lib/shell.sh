@@ -53,17 +53,14 @@ install_antidote() {
   fi
 }
 
-# Install Starship prompt
-install_starship() {
-  info "Setting up Starship prompt..."
+# Install tools from the global mise config (starship, node, AI CLIs, ...)
+install_mise_tools() {
+  info "Installing mise-managed tools..."
 
-  if command -v starship &>/dev/null; then
-    success "Starship already installed: $(starship --version | head -1)"
-  else
-    info "Installing Starship (requires sudo)..."
-    curl -sS https://starship.rs/install.sh | sh -s -- -y
-    success "Starship installed"
-  fi
+  local mise_bin
+  mise_bin="$(command -v mise || printf '%s' "$HOME/.local/bin/mise")"
+  "$mise_bin" install
+  success "mise tools installed"
 }
 
 # Install mise (runtime version manager)

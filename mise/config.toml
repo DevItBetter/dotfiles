@@ -1,0 +1,24 @@
+[tools]
+bun = "1"
+node = "25"
+"npm:@anthropic-ai/claude-code" = { version = "latest", postinstall = 'd="$MISE_TOOL_INSTALL_PATH/node_modules/@anthropic-ai/claude-code"; [ -d "$d" ] || d="$MISE_TOOL_INSTALL_PATH/lib/node_modules/@anthropic-ai/claude-code"; node "$d/install.cjs"' }
+"npm:@openai/codex" = "latest"
+opencode = "latest"
+pnpm = "10"
+"pipx:jcodemunch-mcp" = "latest"
+uv = "latest"
+python = "3.13"
+"npm:@google/gemini-cli" = "latest"
+"npm:@github/copilot" = "latest"
+"pipx:jdatamunch-mcp" = "latest"
+"pipx:jdocmunch-mcp" = "latest"
+"pipx:markitdown-mcp" = "0.0.1a4"
+"pipx:markitdown" = "latest"
+yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"aqua:starship/starship" = "latest"
+"aqua:herdrdev/herdr" = "latest"
+"aqua:temporalio/cli" = "latest"
+
+[settings]
+minimum_release_age_excludes = ["npm:@openai/codex", "npm:@anthropic-ai/claude-code", "npm:@earendil-works/pi-coding-agent"]
