@@ -19,6 +19,22 @@ Machines that use multiple GitHub SSH keys should add machine-local overrides:
 
 Machines with one SSH key can use the default configuration.
 
+## Shells and tools
+
+### Interactive shell
+
+Interactive terminals use Zsh with mise activation. Noninteractive Zsh commands
+use the quiet environment in `zsh/zshenv`, without loading interactive plugins.
+Setup prepares the Antidote plugin cache. Shell startup only loads the existing
+cache. After editing `zsh/zsh_plugins.txt`, rebuild it explicitly:
+
+```sh
+bash ~/dotfiles/script/prepare-zsh.sh
+```
+
+The preparation command may download missing plugins. A failed rebuild leaves
+the previous cache intact. Open a new terminal to load the rebuilt cache.
+
 ## tmux plugins
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.

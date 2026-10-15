@@ -43,12 +43,13 @@ set_default_shell_zsh() {
 
 # Install Antidote (zsh plugin manager)
 install_antidote() {
+  local antidote_dir="${ZDOTDIR:-$HOME}/.antidote"
   info "Setting up Antidote plugin manager..."
 
-  if [ -d "$HOME/.antidote" ]; then
+  if [ -r "$antidote_dir/antidote.zsh" ]; then
     success "Antidote already installed"
   else
-    git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
+    git clone --depth=1 https://github.com/mattmc3/antidote.git "$antidote_dir"
     success "Antidote installed"
   fi
 }
@@ -96,9 +97,7 @@ install_tpm() {
   fi
 }
 
-# Clear plugin cache (will regenerate on first shell)
-clear_plugin_cache() {
-  info "Clearing plugin cache (will regenerate on next shell)..."
-  rm -f "$HOME/.zsh_plugins.zsh"
-  success "Plugin cache cleared"
+# Prepare plugins before opening an interactive shell.
+prepare_zsh_plugins() {
+  bash "$DOTFILES_DIR/script/prepare-zsh.sh"
 }

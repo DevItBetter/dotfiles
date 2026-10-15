@@ -29,7 +29,7 @@ main() {
   install_mise
   install_antidote
   install_starship
-  clear_plugin_cache
+  prepare_zsh_plugins
   set_default_shell_zsh
 
   printf '\n==> Setup complete!\n\n'
