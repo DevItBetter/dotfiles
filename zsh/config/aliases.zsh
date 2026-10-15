@@ -77,6 +77,23 @@ alias gs="git status"
 alias ga="git add"
 
 # -------------------------------------------------------------------
+# Coding agents
+# -------------------------------------------------------------------
+_dotfiles_copilot_alias='bash "$HOME/dotfiles/script/copilot.sh"'
+# Clear only our own alias when reloading after an uninstall.
+if [[ ${aliases[copilot]-} == "$_dotfiles_copilot_alias" ]]; then
+  unalias copilot
+fi
+if [[ -r "$HOME/dotfiles/script/copilot.sh" ]] && (( $+commands[mise] )) &&
+    _dotfiles_copilot_bin="$(MISE_OFFLINE=1 command mise which --tool npm:@github/copilot copilot 2>/dev/null)" &&
+    [[ -x "$_dotfiles_copilot_bin" ]] &&
+    _dotfiles_copilot_node="$(MISE_OFFLINE=1 command mise which --tool node@lts node 2>/dev/null)" &&
+    [[ -x "$_dotfiles_copilot_node" ]]; then
+  alias copilot="$_dotfiles_copilot_alias"
+fi
+unset _dotfiles_copilot_alias _dotfiles_copilot_bin _dotfiles_copilot_node
+
+# -------------------------------------------------------------------
 # Python virtualenv
 # -------------------------------------------------------------------
 alias mkenv='mkvirtualenv'

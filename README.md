@@ -178,6 +178,25 @@ normalizes the Pi process environment so built-in tools, `!` / `!!` commands,
 and extension subprocesses inherit the same defaults. Extensions that supply
 their own environment or remote execution backend can override them.
 
+Interactive Zsh aliases `copilot` to `script/copilot.sh` only when mise resolves
+both Copilot and Node LTS to installed executables. A leftover shim does not
+enable the alias. Reloading the aliases file after an uninstall removes this
+alias. The launcher checks availability again each time it runs and never
+installs missing tools.
+
+The launcher uses `agents/copilot.mjs` and the shared environment helper before
+starting the npm-managed Copilot with Node LTS, independent of the project's
+Node version. It replaces its own process, preserving arguments, standard I/O,
+signals, and exit status. Copilot's native Bash tool and other child processes
+inherit the normalized environment unless they override it. No `BASH_ENV` or
+Copilot settings changes are needed.
+
+Outside interactive Zsh, invoke the launcher explicitly:
+
+```sh
+bash ~/dotfiles/script/copilot.sh [COPILOT_ARGUMENTS...]
+```
+
 The adapters target Unix systems, including WSL. OpenCode uses
 `$XDG_CONFIG_HOME/opencode/plugins`, falling back to `~/.config/opencode/plugins`.
 Pi uses `$PI_CODING_AGENT_DIR/extensions`, falling back to `~/.pi/agent/extensions`.
@@ -192,7 +211,7 @@ process-level environment changes.
 Run the shared environment tests with:
 
 ```sh
-node --test script/tests/agent-environment.test.mjs
+node --test script/tests/*.test.mjs
 ```
 
 For projects that require mise environment variables as well as tool versions,
