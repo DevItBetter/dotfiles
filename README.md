@@ -1,5 +1,6 @@
 # dotfiles
-My dotfiles
+
+My personal shell, terminal, Git, and editor configuration.
 
 ## GitHub setup
 
@@ -8,24 +9,28 @@ single SSH key on `github.com`.
 
 Machines that use multiple GitHub SSH keys should add machine-local overrides:
 
-1. Copy `shared/git/gitconfig.local.example` to `~/.gitconfig.local`.
-2. Copy the commented examples you need from `shared/git/gitconfig.work.example`.
-3. Add the optional `github-work` host from `shared/ssh/config.github-work.example`
-   to `~/.ssh/config`.
+1. Copy `examples/git/gitconfig.local.example` to `~/.gitconfig.local`.
+2. Copy `examples/git/gitconfig.work.example` to `~/.gitconfig.work` and set your
+   work identity. Enable the matching `includeIf` block in `~/.gitconfig.local`
+   and adjust its directory pattern to match your work checkouts.
+3. Add the `github-work` host from `examples/ssh/config.github-work.example`
+   to `~/.ssh/config` and set its key path. Enable the URL rewrites you need in
+   `~/.gitconfig.work`.
 
-Single ssh-key machines use default git configuration, multi-key machines opt into work-specific rewrites and identities.
+Machines with one SSH key can use the default configuration.
 
-## Optional AI CLI hook (machine-local opt-in)
-This repo includes a generic opt-in hook that does nothing by default. To enable it on a single machine:
+## Optional AI CLI hook
 
-1) Create the selector file:
-   - `~/.config/dotfiles/enable_ai_cli_side`
-2) Create a local env file pointing at the AI CLI repo:
-   - `~/.config/dotfiles/ai_cli_side.env`
-   - Contents:
-     - `AI_CLI_SIDE_DIR=/path/to/ai-cli-repo`
+Set `AI_CLI_DIR` in `~/dotfiles/zsh/config/local.zsh` to enable the hook on a
+machine. That file is ignored by Git and loaded before the hook.
 
-When enabled, the hook adds `$AI_CLI_SIDE_DIR/bin` to PATH. If the bin dir is missing but an install script exists, it runs the install script with `--no-symlink`.
+```zsh
+export AI_CLI_DIR=/path/to/ai-cli-repo
+```
+
+The hook sources `$AI_CLI_DIR/shell/init.sh` if it is readable. That script
+controls the integration. With `AI_CLI_DIR` unset or the script missing, the
+hook does nothing.
 
 ## tmux plugins
 
