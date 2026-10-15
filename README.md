@@ -19,19 +19,6 @@ Machines that use multiple GitHub SSH keys should add machine-local overrides:
 
 Machines with one SSH key can use the default configuration.
 
-## Optional AI CLI hook
-
-Set `AI_CLI_DIR` in `~/dotfiles/zsh/config/local.zsh` to enable the hook on a
-machine. That file is ignored by Git and loaded before the hook.
-
-```zsh
-export AI_CLI_DIR=/path/to/ai-cli-repo
-```
-
-The hook sources `$AI_CLI_DIR/shell/init.sh` if it is readable. That script
-controls the integration. With `AI_CLI_DIR` unset or the script missing, the
-hook does nothing.
-
 ## tmux plugins
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.
