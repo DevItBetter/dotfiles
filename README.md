@@ -35,6 +35,46 @@ bash ~/dotfiles/script/prepare-zsh.sh
 The preparation command may download missing plugins. A failed rebuild leaves
 the previous cache intact. Open a new terminal to load the rebuilt cache.
 
+Agents and editors need mise's shims on `PATH`:
+
+```sh
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+```
+
+### Agent command environments
+
+Setup links the adapters in `agents/` to OpenCode's global plugins directory and
+Pi's user extensions directory. Both use `agents/command-environment.mjs` to put
+mise shims before inherited tool installation paths and disable Git paging and
+color. Existing Git environment overrides and other PATH entries remain intact.
+This is process configuration, not a sandbox.
+
+The OpenCode V2 plugin selects `/bin/bash` for shell commands, independently of
+your login shell. Pi already uses noninteractive Bash by default; its extension
+normalizes the Pi process environment so built-in tools, `!` / `!!` commands,
+and extension subprocesses inherit the same defaults. Extensions that supply
+their own environment or remote execution backend can override them.
+
+The adapters target Unix systems, including WSL. OpenCode uses
+`$XDG_CONFIG_HOME/opencode/plugins`, falling back to `~/.config/opencode/plugins`.
+Pi uses `$PI_CODING_AGENT_DIR/extensions`, falling back to `~/.pi/agent/extensions`.
+No model, theme, authentication, or session files are linked. A custom Pi
+`shellPath` or `shellCommandPrefix` remains device-local and can change its shell
+behavior. Do not source interactive Zsh configuration from those settings.
+
+Restart OpenCode or use its reload command after installation. In Pi, use
+`/reload` or restart. Restart Pi after removing the extension to clear its
+process-level environment changes.
+
+Run the shared environment tests with:
+
+```sh
+node --test script/tests/agent-environment.test.mjs
+```
+
+For projects that require mise environment variables as well as tool versions,
+use `mise run` tasks or `mise exec -- COMMAND` from the project directory.
+
 ## tmux plugins
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.

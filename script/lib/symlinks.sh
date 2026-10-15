@@ -17,6 +17,8 @@ symlink_dotfiles() {
   link_file "$DOTFILES_DIR/git/gitconfig" "$HOME/.gitconfig"
   link_file "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
 
+  link_agent_integrations
+
   # Starship config
   mkdir -p "$HOME/.config"
   link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
@@ -32,4 +34,15 @@ symlink_dotfiles() {
   # Cursor rules
   mkdir -p "$HOME/.cursor"
   link_file "$DOTFILES_DIR/cursor/rules" "$HOME/.cursor/rules"
+}
+
+# Install behavior shared by agents without sharing their personal settings.
+link_agent_integrations() {
+  local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}"
+  local pi_dir="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+  mkdir -p "$config_dir/opencode/plugins" "$pi_dir/extensions"
+  link_file "$DOTFILES_DIR/agents/opencode.js" "$config_dir/opencode/plugins/command-environment.js"
+  link_file "$DOTFILES_DIR/agents/command-environment.mjs" "$config_dir/opencode/plugins/command-environment.mjs"
+  link_file "$DOTFILES_DIR/agents/pi.js" "$pi_dir/extensions/command-environment.js"
+  link_file "$DOTFILES_DIR/agents/command-environment.mjs" "$pi_dir/extensions/command-environment.mjs"
 }
