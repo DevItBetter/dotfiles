@@ -202,6 +202,9 @@ def legacy_config(directory, catalog):
         target = path.parent / target
     if target.resolve() != (catalog.root / "mise/config.toml").resolve():
         return None
+    # Updating dotfiles can remove the old target before setup migrates its link.
+    if not path.exists():
+        return path
     data = read_toml(path)
     expected = read_toml(catalog.root / "mise/settings.toml")
     expected["tools"] = {tool["key"]: tool["config"] for tool in catalog.tools.values()}
@@ -242,9 +245,11 @@ def save_selection(directory, catalog, selection, previous):
         while os.path.lexists(backup):
             suffix += 1
             backup = legacy.with_name(f"config.toml.before-dotfiles-selection.{suffix}")
-        shutil.copy2(legacy, backup)
+        dangling = not legacy.exists()
+        shutil.copy2(legacy, backup, follow_symlinks=not dangling)
         atomic_text(legacy, "# Machine-local mise overrides. Shared tools are selected in conf.d/.\n")
-        print(f"Preserved the previous shared config at {backup}")
+        description = "config link" if dangling else "config"
+        print(f"Preserved the previous shared {description} at {backup}")
     for name, target in wanted.items():
         path = fragments / name
         if name != "00-dotfiles-settings.toml":
@@ -420,6 +425,11 @@ def main(argv=None):
         return 0
     directory = config_directory()
     selection, previous = load_state(directory, catalog)
+    if args.keep_current and not args.profile and not (directory / STATE).exists():
+        legacy = legacy_config(directory, catalog)
+        if legacy and not legacy.exists():
+            raise ValueError("The old shared config is missing, so its tools cannot be imported. "
+                             "Choose a profile with --profile or review tools in the TUI instead.")
     if args.profile:
         selection = Selection()
     for name in args.profile:

@@ -149,6 +149,35 @@ class MiseConfigTests(unittest.TestCase):
         self.assertTrue((self.directory / "config.toml").is_symlink())
         self.assertFalse((self.directory / "conf.d").exists())
 
+    def test_dangling_legacy_link_is_preserved_and_replaced(self):
+        catalog, legacy = self.legacy_fixture()
+        legacy.unlink()
+        selection = Selection(profiles={"terumo"})
+        save_selection(self.directory, catalog, selection, {})
+        config = self.directory / "config.toml"
+        self.assertTrue(config.is_file())
+        self.assertFalse(config.is_symlink())
+        backup = self.directory / "config.toml.before-dotfiles-selection"
+        self.assertTrue(backup.is_symlink())
+        self.assertEqual(backup.readlink(), legacy)
+        restored, _ = load_state(self.directory, catalog)
+        self.assertEqual(restored.resolve(catalog), selection.resolve(catalog))
+
+    def test_missing_legacy_tools_cannot_be_imported_silently(self):
+        self.directory.mkdir(parents=True)
+        config = self.directory / "config.toml"
+        config.symlink_to(ROOT / "mise/config.toml")
+        result = self.run_cli("--keep-current")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot be imported", result.stderr)
+        self.assertTrue(config.is_symlink())
+        self.assertFalse((self.directory / STATE).exists())
+        result = self.run_cli("--profile", "terumo")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(config.is_symlink())
+        selection, _ = load_state(self.directory, self.catalog)
+        self.assertEqual(selection.profiles, {"terumo"})
+
     def test_collision_preflight_makes_no_changes(self):
         path = self.directory / "conf.d/10-dotfiles-pi.toml"
         path.parent.mkdir(parents=True)

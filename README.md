@@ -103,7 +103,11 @@ Project-specific runtime versions belong in the project's mise configuration.
 
 The old dotfiles-owned global config symlink is migrated to a regular local
 file after its contents are backed up. Custom changes stop migration for manual
-review. Switching profiles removes only the selector's unchanged fragments, never
+review. If updating dotfiles already removed the old target, setup backs up the
+link itself. Choose a profile or use the TUI; `--keep-current` cannot import
+tools from that missing file.
+
+Switching profiles removes only the selector's unchanged fragments, never
 unmanaged files or installed tools. Existing installations may still be
 reachable through shims; deselection is not an uninstall or an access policy.
 Review and uninstall unwanted tools separately.
