@@ -1,0 +1,6 @@
+[tools]
+"aqua:starship/starship" = "latest"
+
+[_]
+label = "Starship prompt"
+groups = ["core"]

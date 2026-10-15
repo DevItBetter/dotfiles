@@ -1,0 +1,6 @@
+[tools]
+yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
+
+[_]
+label = "yt-dlp"
+groups = ["personal"]

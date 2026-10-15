@@ -1,0 +1,6 @@
+[tools]
+node = "lts"
+
+[_]
+label = "Node.js LTS"
+groups = ["core"]

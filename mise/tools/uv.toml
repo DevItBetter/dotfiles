@@ -1,0 +1,6 @@
+[tools]
+uv = "latest"
+
+[_]
+label = "uv"
+groups = ["core"]

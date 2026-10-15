@@ -1,0 +1,7 @@
+[tools]
+"npm:@anthropic-ai/claude-code" = { version = "latest", postinstall = 'd="$MISE_TOOL_INSTALL_PATH/node_modules/@anthropic-ai/claude-code"; [ -d "$d" ] || d="$MISE_TOOL_INSTALL_PATH/lib/node_modules/@anthropic-ai/claude-code"; node "$d/install.cjs"' }
+
+[_]
+label = "Claude Code"
+groups = ["coding-agents"]
+requires = ["node"]

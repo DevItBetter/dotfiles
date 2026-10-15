@@ -12,6 +12,7 @@ BASE_PACKAGES=(
   zsh
   git
   curl
+  python3
   fzf
   tmux
   alacritty

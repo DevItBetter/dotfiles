@@ -1,0 +1,6 @@
+[tools]
+bun = "1"
+
+[_]
+label = "Bun"
+groups = ["development"]

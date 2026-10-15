@@ -1,0 +1,6 @@
+[tools]
+"aqua:herdrdev/herdr" = "latest"
+
+[_]
+label = "Herdr"
+groups = ["workflow"]

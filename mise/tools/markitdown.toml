@@ -1,0 +1,8 @@
+[tools]
+# ONNX Runtime dependencies do not yet provide Python 3.15 wheels.
+"pipx:markitdown" = { version = "latest", uvx_args = "--python 3.14" }
+
+[_]
+label = "MarkItDown CLI"
+groups = ["markitdown"]
+requires = ["uv", "python"]

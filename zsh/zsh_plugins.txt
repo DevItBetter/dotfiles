@@ -35,5 +35,4 @@ zsh-users/zsh-syntax-highlighting kind:defer
 # -------------------------------------------------------------------
 # Commands (binaries)
 # -------------------------------------------------------------------
-so-fancy/diff-so-fancy kind:path
 denilsonsa/prettyping kind:path

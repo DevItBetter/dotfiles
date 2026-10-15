@@ -1,0 +1,7 @@
+[tools]
+"pipx:markitdown-mcp" = { version = "0.0.1a4", uvx_args = "--python 3.14" }
+
+[_]
+label = "MarkItDown MCP"
+groups = ["markitdown"]
+requires = ["uv", "python"]

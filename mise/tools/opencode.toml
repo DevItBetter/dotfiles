@@ -1,0 +1,7 @@
+[tools]
+opencode = "latest"
+
+[_]
+label = "OpenCode"
+groups = ["coding-agents"]
+requires = ["node"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Dotfiles Setup Script
-# Run: ./script/setup.sh
+# Run: bash script/setup.sh [--profile terumo|gbl] [--with GROUP_OR_TOOL]
 #
 set -euo pipefail
 
@@ -20,6 +20,22 @@ source "$SCRIPT_DIR/lib/git.sh"
 source "$SCRIPT_DIR/lib/shell.sh"
 
 main() {
+  # Choose tools before package installation. Cancellation leaves setup untouched.
+  local argument
+  for argument in "$@"; do
+    case "$argument" in
+      --help|-h|--list|--dry-run)
+        bash "$SCRIPT_DIR/configure-mise.sh" "$@"
+        return
+        ;;
+      --install)
+        error "Setup already installs selected tools; omit --install."
+        return 1
+        ;;
+    esac
+  done
+  bash "$SCRIPT_DIR/configure-mise.sh" "$@"
+
   printf '\n==> Setting up dotfiles from: %s\n\n' "$DOTFILES_DIR"
 
   install_baseline_packages
@@ -27,8 +43,8 @@ main() {
   configure_git
   install_tpm
   install_mise
+  install_mise_tools
   install_antidote
-  install_starship
   prepare_zsh_plugins
   set_default_shell_zsh
 

@@ -1,0 +1,7 @@
+[tools]
+"pipx:jdocmunch-mcp" = "latest"
+
+[_]
+label = "jdocmunch MCP"
+groups = ["jmunch"]
+requires = ["uv", "python"]
