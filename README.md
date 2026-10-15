@@ -217,6 +217,90 @@ node --test script/tests/*.test.mjs
 For projects that require mise environment variables as well as tool versions,
 use `mise run` tasks or `mise exec -- COMMAND` from the project directory.
 
+### VS Code agents
+
+VS Code integration is opt-in and requires version 1.142 or newer and installed
+mise Node LTS. Configure stable VS Code first; Insiders has separate settings:
+
+```sh
+node ~/dotfiles/script/configure-vscode.mjs --dry-run
+node ~/dotfiles/script/configure-vscode.mjs
+# Optional, for VS Code Insiders:
+node ~/dotfiles/script/configure-vscode.mjs --insiders
+```
+
+To also use mise's installed Python `latest` as VS Code's default interpreter:
+
+```sh
+node ~/dotfiles/script/configure-vscode.mjs --python --dry-run
+node ~/dotfiles/script/configure-vscode.mjs --python
+```
+
+The optional `--python` flag resolves the real executable offline with
+`mise which --tool python@latest python`; it does not install Python or point
+the Python extension at a shim. It replaces an unset or system-Python default,
+but refuses to overwrite a custom default such as `${workspaceFolder}/.venv`.
+The resolved path stays in local settings, not dotfiles. Rerun if an interpreter
+update changes that path.
+
+VS Code remembers interpreter selections per workspace. Changing the default
+does not replace those saved selections. In an existing workspace still using
+system Python, run **Python: Select Interpreter**, choose **Enter interpreter
+path**, and enter the path shown by the configurator. Keep project virtual
+environments selected where needed. Local settings do not configure remote
+Python extensions, containers, or Jupyter kernel selections.
+
+The configurator preserves JSONC comments and unrelated settings, backs up the
+settings file before changing it, and refuses conflicting agent settings or
+symlinked settings files. Repeated runs make no further changes. Settings and
+generated launchers stay machine-local; no models, credentials, themes,
+permissions, saved workspace interpreter selections, or MCP definitions are
+copied into dotfiles. Existing sandbox settings remain unchanged.
+
+By default, it sets three values in the selected edition's default user settings:
+
+- `chat.tools.terminal.terminalProfile.linux` selects `agents/bash` for Local
+  chat terminal commands. Your ordinary terminals still use their usual shell.
+- `terminal.integrated.agentHostProfile.linux` selects the same Bash launcher
+  for local Agent Host terminals, including `!` commands.
+- `chat.agentHost.copilot.runtimePath` selects a generated launcher for that
+  editor's **bundled Copilot SDK runtime**, not the mise-managed Copilot CLI.
+  This advanced, experimental setting normalizes the SDK process environment
+  before its native tools and child processes start. It leaves the SDK's terminal
+  and sandbox implementations in place. The runtime-path setting does not sync.
+
+On macOS the two profile keys use `osx` instead of `linux`. Use `--app-root` if
+the configurator cannot locate the editor's `resources/app` directory; use
+`--settings` for a nonstandard default user settings path. The configurator
+checks that the installed editor still exposes these settings before writing.
+
+Agent Host currently ignores profile `args` and `env`, and its SDK's default
+shell does not use that terminal profile at all. Both launch paths are needed.
+The Bash launcher skips personal rc/login files while preserving VS Code's
+injected shell integration. Neither launcher sets global `BASH_ENV` or changes
+the VS Code application's own environment.
+
+Restart VS Code after configuring it and create fresh agent terminals/sessions.
+Choose **Local** for extension-host chat, or **Copilot** for Agent Host sessions.
+Rerun configuration if a VS Code update moves the bundled runtime. Remote hosts,
+containers, and cloud sessions need their own environment setup; local settings
+do not configure them. Extensions and MCP servers launched outside these agent
+processes also retain their own environments.
+
+An optional live regression test runs the bundled SDK's Bash tool with native
+sandboxing enabled, temporary state, and no model requests. It requires the
+editor's sandbox prerequisites:
+
+```sh
+VSCODE_APP_ROOT=/usr/share/code/resources/app node --test script/tests/vscode-sdk.test.mjs
+```
+
+To remove the integration, remove the three settings above. If you used
+`--python`, also remove `python.defaultInterpreterPath` or choose another default.
+Backups are named
+`settings.json.before-dotfiles-agents`, with numbered suffixes when necessary.
+Do not restore an old backup over newer personal settings without reviewing it.
+
 ## tmux plugins
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Keep the basename "bash" so VS Code recognizes its shell integration.
+set -euo pipefail
+AGENTS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+exec /bin/bash "$AGENTS_DIR/../script/agent-command.sh" /bin/bash "$@"
