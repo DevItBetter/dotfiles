@@ -25,9 +25,9 @@ symlink_dotfiles() {
   mkdir -p "$HOME/.config/alacritty"
   link_file "$DOTFILES_DIR/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
 
-   # User-local executables
-   mkdir -p "$HOME/.local/bin"
-   link_file "$DOTFILES_DIR/tmux/bin/tmux-pane-bg" "$HOME/.local/bin/tmux-pane-bg"
+  # User-local executables
+  mkdir -p "$HOME/.local/bin"
+  link_file "$DOTFILES_DIR/tmux/bin/tmux-pane-bg" "$HOME/.local/bin/tmux-pane-bg"
 
   # Cursor rules
   mkdir -p "$HOME/.cursor"
