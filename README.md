@@ -305,4 +305,14 @@ Do not restore an old backup over newer personal settings without reviewing it.
 
 The setup script installs TPM into `~/.tmux/plugins/tpm`. Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under `~/.tmux/plugins` are generated machine-local state and are not tracked in this repo.
 
+After setup, install the declared plugins with:
+
+```sh
+bash ~/.tmux/plugins/tpm/bin/install_plugins
+```
+
+In an existing tmux server, reload the configuration with the prefix followed by
+`r`, then press the prefix followed by `I` to install and load the plugins.
+The prefix is Ctrl+/ or Alt+z in this configuration.
+
 The tmux config uses `tmux-resurrect` and `tmux-continuum` to save sessions every 15 minutes and restore them when tmux starts.
