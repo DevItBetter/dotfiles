@@ -169,8 +169,10 @@ export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 Setup links the adapters in `agents/` to OpenCode's global plugins directory and
 Pi's user extensions directory. Both use `agents/command-environment.mjs` to put
 mise shims before inherited tool installation paths and disable Git paging and
-color. Existing Git environment overrides and other PATH entries remain intact.
-This is process configuration, not a sandbox.
+color. Color is disabled per command as well as through `color.ui`, because a
+setting such as `color.branch = always` overrides `color.ui`. Existing Git
+environment overrides and other PATH entries remain intact. This is process
+configuration, not a sandbox.
 
 The OpenCode V2 plugin selects `/bin/bash` for shell commands, independently of
 your login shell. Pi already uses noninteractive Bash by default; its extension
@@ -207,6 +209,30 @@ behavior. Do not source interactive Zsh configuration from those settings.
 Restart OpenCode or use its reload command after installation. In Pi, use
 `/reload` or restart. Restart Pi after removing the extension to clear its
 process-level environment changes.
+
+Claude Code integration is opt-in because it edits Claude Code's user settings:
+
+```sh
+node ~/dotfiles/script/configure-claude-code.mjs --dry-run
+node ~/dotfiles/script/configure-claude-code.mjs
+```
+
+It sets `env.CLAUDE_CODE_SHELL` to `/bin/bash`, so the Bash tool snapshots the
+stock `~/.bashrc` instead of interactive Zsh configuration, and adds a
+`SessionStart` hook that runs `script/claude-code-env.sh`. The hook resolves Node
+LTS through mise offline and writes the shared environment as `export` lines to
+`$CLAUDE_ENV_FILE`, which Claude Code sources before every Bash command. This
+applies however Claude Code starts: terminal, remote control, IDE, or desktop.
+Hooks and MCP servers keep Claude Code's own environment.
+
+The configurator uses `$CLAUDE_CONFIG_DIR/settings.json`, falling back to
+`~/.claude/settings.json`; `--settings` selects another file. It keeps unrelated
+settings and hooks, backs the file up as `settings.json.before-dotfiles-agents`
+before changing it, and refuses a different `CLAUDE_CODE_SHELL` or a symlinked
+settings file. Repeated runs make no further changes. Start a new session after
+configuring; running sessions keep their shell. To remove the integration,
+delete `env.CLAUDE_CODE_SHELL` and the `SessionStart` hook that runs
+`claude-code-env.sh`.
 
 Run the shared environment tests with:
 

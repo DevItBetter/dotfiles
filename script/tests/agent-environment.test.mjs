@@ -54,6 +54,26 @@ test("Git retains prior overrides and gets plain output in Bash", () => {
   assert.equal(child.stdout, "histogram\nfalse\ncat\n");
 });
 
+test("per-command color settings in Git config do not color agent output", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "agent-color-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const global = join(directory, "gitconfig");
+  writeFileSync(global, "[color]\n\tui = always\n\tbranch = always\n\tdiff = always\n" +
+    "[user]\n\tname = Test\n\temail = test@example.com\n");
+  const env = { ...process.env, ...inherited, GIT_CONFIG_GLOBAL: global, GIT_CONFIG_NOSYSTEM: "1" };
+  const script = 'git init -q -b main repo && cd repo && git commit -q --allow-empty -m x && ' +
+    'git branch feature && echo a > f && git add f && git branch --list && git diff --cached';
+  const run = (overrides) => spawnSync("/bin/bash", ["--noprofile", "--norc", "-c", script],
+    { cwd: directory, env: { ...env, ...overrides }, encoding: "utf8" });
+  // Without the shared environment the fixture really does produce color codes.
+  assert.match(run({}).stdout, /\x1b\[/);
+  rmSync(join(directory, "repo"), { recursive: true, force: true });
+  const child = run(commandEnvironment(inherited));
+  assert.equal(child.status, 0, child.stderr);
+  assert.match(child.stdout, /^ {2}feature\n\* main\ndiff --git/);
+  assert.doesNotMatch(child.stdout, /\x1b/);
+});
+
 test("OpenCode V2 hook preserves parent Git entries in a filtered environment", async () => {
   let hook;
   await opencode.setup({ shell: { hook: async (name, callback) => {
@@ -68,7 +88,7 @@ test("OpenCode V2 hook preserves parent Git entries in a filtered environment", 
     assert.equal(event.shell, "/bin/bash");
     assert.equal(event.env.GIT_CONFIG_KEY_0, "diff.algorithm");
     assert.equal(event.env.GIT_CONFIG_VALUE_0, "histogram");
-    assert.equal(event.env.GIT_CONFIG_COUNT, "2");
+    assert.equal(event.env.GIT_CONFIG_COUNT, "12");
   } finally {
     for (const key of Object.keys(process.env)) delete process.env[key];
     Object.assign(process.env, saved);
