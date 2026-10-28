@@ -92,14 +92,16 @@ Provisioning previews by default:
 
 ```sh
 bash script/provision.sh
-bash script/provision.sh --terminal --plugins --login-shell
+bash script/provision.sh --plugins --login-shell
 # Explicitly authorize the previewed changes:
-bash script/provision.sh --apply --terminal --plugins --login-shell
+bash script/provision.sh --apply --plugins --login-shell
 ```
 
 The baseline contains shell utilities, Git, curl, Python, fzf, tmux, ripgrep,
-less, and Perl support for Git's pager.
-`--terminal` adds Alacritty. `--plugins` downloads Antidote and TPM and prepares
+less, ShellCheck, and Perl support for Git's pager.
+Alacritty is added on macOS and on Linux machines with a local X11 or Wayland
+session. SSH sessions, containers, and WSL skip it; `--terminal` forces it and
+`--no-terminal` leaves it out. `--plugins` downloads Antidote and TPM and prepares
 the Zsh plugin cache. `--login-shell` explicitly requests an account shell change.
 System packages require root or sudo on Linux. On macOS, install Homebrew first;
 GUI applications use casks. Containers can deploy configuration without sudo or

@@ -66,8 +66,11 @@ System provisioning previews by default. It requires `--apply` to make changes:
 
 ```sh
 bash script/provision.sh
-bash script/provision.sh --apply --terminal --plugins
+bash script/provision.sh --apply --plugins
 ```
+
+Alacritty is included on macOS and Linux desktops and skipped over SSH, in
+containers, and on WSL. Use `--terminal` or `--no-terminal` to override.
 
 Login-shell changes require `--login-shell`. Containers and managed hosts can skip
 provisioning. Fonts are no longer installed automatically; install the font on

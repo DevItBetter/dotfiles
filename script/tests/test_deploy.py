@@ -267,9 +267,47 @@ class ProvisionTests(unittest.TestCase):
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("alacritty", result.stdout)
+        self.assertIn("shellcheck", result.stdout)
         self.assertIn("Plugin downloads: true", result.stdout)
         self.assertIn("Change login shell: true", result.stdout)
         self.assertNotIn("Installing", result.stdout)
+        result = subprocess.run(["/bin/bash", str(ROOT / "script/provision.sh"), "--no-terminal"],
+                                text=True, capture_output=True)
+        self.assertNotIn("alacritty", result.stdout)
+
+    def test_alacritty_defaults_to_local_desktops_only(self):
+        cases = {
+            "macos": ("Darwin", "", {"SSH_CONNECTION": "1 2 3 4"}, True),
+            "wayland": ("Linux", "", {"WAYLAND_DISPLAY": "wayland-0"}, True),
+            "x11 session": ("Linux", "", {"XDG_SESSION_TYPE": "x11"}, True),
+            "headless": ("Linux", "", {}, False),
+            "ssh with forwarded X": ("Linux", "", {"DISPLAY": "localhost:10", "SSH_TTY": "/dev/pts/1"}, False),
+            "wsl with WSLg": ("Linux", "is_wsl() { :; }", {"DISPLAY": ":0"}, False),
+            "container": ("Linux", "is_container() { :; }", {"DISPLAY": ":0"}, False),
+        }
+        clean = {k: v for k, v in os.environ.items() if k not in
+                 ("DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE", "SSH_CONNECTION", "SSH_TTY",
+                  "WSL_DISTRO_NAME")}
+        for name, (system, override, extra, desktop) in cases.items():
+            with self.subTest(name):
+                result = subprocess.run(["/bin/bash", "-euc", f'''
+                    source "$1/script/lib/packages.sh"
+                    uname() {{ printf '%s\\n' {system}; }}
+                    is_wsl() {{ return 1; }}
+                    is_container() {{ return 1; }}
+                    {override}
+                    has_local_desktop
+                ''', "--", str(ROOT)], env={**clean, **extra}, text=True, capture_output=True)
+                self.assertEqual(result.returncode == 0, desktop, result.stderr)
+
+    def test_shellcheck_uses_distribution_package_names(self):
+        result = subprocess.run(["/bin/bash", "-euc", '''
+            source "$1/script/lib/packages.sh"
+            for pm in apt dnf yum pacman brew; do map_pkg "$pm" shellcheck; done
+        ''', "--", str(ROOT)], text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.split(),
+                         ["shellcheck", "ShellCheck", "ShellCheck", "shellcheck", "shellcheck"])
 
     def test_macos_prefers_brew_even_if_another_manager_is_on_path(self):
         result = subprocess.run(["/bin/bash", "-euc", '''

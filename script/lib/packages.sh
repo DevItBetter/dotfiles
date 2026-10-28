@@ -17,11 +17,35 @@ BASE_PACKAGES=(
   tmux
   ripgrep
   less
+  shellcheck
   perl-time-hires
 )
 
 DISTRO_ID_CACHE=""
 DISTRO_LIKE_CACHE=""
+
+is_wsl() {
+  [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null
+}
+
+is_container() {
+  [ -e /.dockerenv ] || [ -e /run/.containerenv ]
+}
+
+# Desktop terminals belong on machines with a local display, not on SSH hosts,
+# containers, or WSL (whose terminal runs on Windows).
+has_local_desktop() {
+  case "$(uname -s)" in
+    Darwin) return 0 ;;
+    Linux) ;;
+    *) return 1 ;;
+  esac
+  if is_wsl || is_container || [ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]; then
+    return 1
+  fi
+  [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] ||
+    [ "${XDG_SESSION_TYPE:-}" = x11 ] || [ "${XDG_SESSION_TYPE:-}" = wayland ]
+}
 
 # Detect the system's package manager
 detect_package_manager() {
@@ -97,6 +121,7 @@ lookup_pkg_override() {
     pacman:perl-time-hires) echo "perl" ;;
     brew:perl-time-hires) echo "perl" ;;
     brew:python3) echo "python" ;;
+    dnf:shellcheck|yum:shellcheck) echo "ShellCheck" ;;
     *) return 1 ;;
   esac
 }
