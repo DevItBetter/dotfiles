@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -12,19 +12,30 @@ const aliases = join(root, "zsh/config/aliases.zsh");
 const zsh = spawnSync("/bin/sh", ["-c", "command -v zsh"], { encoding: "utf8" }).stdout.trim();
 const actualMise = spawnSync("/bin/sh", ["-c", "command -v mise"], { encoding: "utf8" }).stdout.trim();
 
-function fixture(t) {
+function fixture(t, wrapper = false) {
   const directory = mkdtempSync(join(tmpdir(), "copilot-launcher-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const home = join(directory, "home with spaces");
   const bin = join(directory, "bin");
   const data = join(directory, "mise data");
-  const copilot = join(data, "installs/copilot/latest/bin/copilot");
-  const entry = join(data, "installs/copilot/latest/lib/entry.mjs");
+  const copilot = join(data, wrapper ? "installs/npm-github-copilot/latest/node_modules/.bin/copilot" :
+    "installs/copilot/latest/bin/copilot");
+  const entry = wrapper ? resolve(dirname(copilot),
+    "../.mise/@github+copilot@9.8.7/node_modules/@github/copilot/npm-loader.mjs") :
+    join(data, "installs/copilot/latest/lib/entry.mjs");
   for (const path of [home, bin, dirname(copilot), dirname(entry), join(data, "shims")]) {
     mkdirSync(path, { recursive: true });
   }
   symlinkSync(root, join(home, "dotfiles"));
-  symlinkSync(entry, copilot);
+  if (wrapper) {
+    writeFileSync(copilot, `#!/bin/sh
+# aube-bin-shim v2 target=${relative(dirname(copilot), entry)}
+echo 'The shell wrapper must not resolve Node through PATH' >&2
+exit 89
+`, { mode: 0o755 });
+  } else {
+    symlinkSync(entry, copilot);
+  }
   // A stale shim must not be mistaken for an installed Copilot executable.
   symlinkSync("/bin/true", join(data, "shims/copilot"));
   writeFileSync(join(data, "shims/node"), "#!/bin/sh\necho 'Node shim must not bootstrap Copilot' >&2\nexit 88\n",
@@ -46,7 +57,7 @@ const child = spawnSync("/bin/bash", ["--noprofile", "--norc", "-c",
   'printf "%s\\n" "$GIT_PAGER"; git config --get color.ui; git config --get diff.algorithm; command -v node'],
   { encoding: "utf8" });
 console.log(JSON.stringify({ args: process.argv.slice(2), cwd: process.cwd(), pid: process.pid,
-  path: process.env.PATH, credential: process.env.EXAMPLE_CREDENTIAL,
+  path: process.env.PATH, nodePath: process.env.NODE_PATH, credential: process.env.EXAMPLE_CREDENTIAL,
   bashEnv: process.env.BASH_ENV, input: readFileSync(0, "utf8"), child }));
 if (process.env.TEST_SIGNAL) process.kill(process.pid, process.env.TEST_SIGNAL);
 process.exit(Number(process.env.TEST_EXIT_CODE || 0));
@@ -102,6 +113,32 @@ test("Copilot launcher preserves nonzero exit status", (t) => {
   f.env.TEST_EXIT_CODE = "42";
   assert.equal(launch(f).status, 42);
 });
+
+for (const linked of [false, true]) {
+  test(`Copilot launcher resolves an aube shell wrapper${linked ? " through a symlink" : ""}`, (t) => {
+    const f = fixture(t, true);
+    if (linked) {
+      f.env.TEST_COPILOT_BIN = join(f.bin, "copilot-link");
+      symlinkSync(f.copilot, f.env.TEST_COPILOT_BIN);
+    }
+    const args = ["--prompt", "spaces and 'quotes' and $variables", ""];
+    const result = launch(f, args, { input: "wrapper input\n" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, "");
+    const cli = JSON.parse(result.stdout);
+    assert.deepEqual(cli.args, args);
+    assert.equal(cli.cwd, f.directory);
+    assert.equal(cli.pid, result.pid);
+    assert.equal(cli.input, "wrapper input\n");
+    assert.equal(cli.credential, "device-local-test-value");
+    assert.equal(cli.nodePath, [resolve(dirname(f.copilot), ".."),
+      resolve(dirname(f.copilot), "../.mise/node_modules")].join(":"));
+    assert.equal(cli.path.split(":")[0], join(f.data, "shims"));
+    assert(!cli.path.includes("/installs/"));
+    assert.equal(cli.child.status, 0, cli.child.stderr);
+    assert.equal(cli.child.stdout, `cat\nfalse\nhistogram\n${f.data}/shims/node\n`);
+  });
+}
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   test(`Copilot launcher preserves ${signal}`, (t) => {

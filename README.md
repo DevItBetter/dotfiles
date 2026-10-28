@@ -186,7 +186,9 @@ installs missing tools.
 
 The launcher uses `agents/copilot.mjs` and the shared environment helper before
 starting the npm-managed Copilot with Node LTS, independent of the project's
-Node version. It replaces its own process, preserving arguments, standard I/O,
+Node version. It supports both JavaScript symlinks and mise's aube shell wrappers,
+resolving the wrapper's relative target without hard-coded install paths or versions.
+It replaces its own process, preserving arguments, standard I/O,
 signals, and exit status. Copilot's native Bash tool and other child processes
 inherit the normalized environment unless they override it. No `BASH_ENV` or
 Copilot settings changes are needed.
