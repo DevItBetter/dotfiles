@@ -1,6 +1,11 @@
 import { homedir } from "node:os";
 import { delimiter, join, resolve, sep } from "node:path";
 
+// A command's own color.<command> setting overrides color.ui, so each is disabled.
+const COLOR_KEYS = ["color.ui", "color.advice", "color.branch", "color.diff", "color.grep",
+  "color.interactive", "color.push", "color.remote", "color.showbranch", "color.status",
+  "color.transport"];
+
 // Return only overrides. Callers retain their own credentials and session env.
 export function commandEnvironment(inherited) {
   const home = inherited.HOME || homedir();
@@ -21,7 +26,7 @@ export function commandEnvironment(inherited) {
     throw new Error("GIT_CONFIG_COUNT must be a nonnegative integer");
   }
   let index = Number(count);
-  let color;
+  const colors = new Map();
   for (let i = 0; i < index; i++) {
     for (const prefix of ["GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"]) {
       const name = `${prefix}${i}`;
@@ -30,13 +35,12 @@ export function commandEnvironment(inherited) {
       }
       env[name] = inherited[name];
     }
-    if (env[`GIT_CONFIG_KEY_${i}`].toLowerCase() === "color.ui") {
-      color = env[`GIT_CONFIG_VALUE_${i}`];
-    }
+    colors.set(env[`GIT_CONFIG_KEY_${i}`].toLowerCase(), env[`GIT_CONFIG_VALUE_${i}`]);
   }
   // Reloads and nested agents must not keep appending the same override.
-  if (color !== "false") {
-    env[`GIT_CONFIG_KEY_${index}`] = "color.ui";
+  for (const key of COLOR_KEYS) {
+    if (colors.get(key) === "false") continue;
+    env[`GIT_CONFIG_KEY_${index}`] = key;
     env[`GIT_CONFIG_VALUE_${index}`] = "false";
     index++;
   }

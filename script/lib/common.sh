@@ -35,16 +35,22 @@ error()   { printf '%s[ERROR]%s %s\n' "$RED"   "$RESET" "$*" >&2; }
 
 # Create symlink with backup handling
 link_file() {
-  local src="$1" dst="$2"
+  local src="$1" dst="$2" backup suffix
   if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
     success "Already linked: $dst"
-  elif [ -e "$dst" ]; then
-    warn "Backing up existing: $dst -> $dst.backup"
-    mv "$dst" "$dst.backup"
-    ln -sf "$src" "$dst"
+  elif [ -e "$dst" ] || [ -L "$dst" ]; then
+    backup="$dst.backup"
+    suffix=0
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
+      suffix=$((suffix + 1))
+      backup="$dst.backup.$suffix"
+    done
+    warn "Backing up existing: $dst -> $backup"
+    mv -- "$dst" "$backup" || return "$?"
+    ln -s -- "$src" "$dst" || return "$?"
     success "Linked: $dst"
   else
-    ln -sf "$src" "$dst"
+    ln -s -- "$src" "$dst" || return "$?"
     success "Linked: $dst"
   fi
 }

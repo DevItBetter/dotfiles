@@ -158,7 +158,7 @@ export function vscodePlan({ appRoot, home, config, data, insiders = false, sett
   return { settings, before, after: updateSettings(before, updates), launcher, content, runtime, updates };
 }
 
-function writeChanged(path, before, content, mode) {
+export function writeChanged(path, before, content, mode) {
   if (before === content) return;
   mkdirSync(dirname(path), { recursive: true });
   if (existsSync(path)) {
