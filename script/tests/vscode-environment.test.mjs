@@ -19,7 +19,8 @@ function fixture(t) {
   const home = join(directory, "home with 'quotes' and spaces");
   const bin = join(directory, "bin");
   const data = join(directory, "data");
-  const config = join(directory, "config");
+  const config = process.platform === "darwin" ? join(home, "Library/Application Support") :
+    join(directory, "config");
   const appRoot = join(directory, "editor/resources/app");
   const settings = join(config, "Code/User/settings.json");
   const target = `${process.platform}-${process.arch}`;
@@ -207,7 +208,8 @@ test("generated runtime launcher forwards stdio to the editor's bundled runtime"
 
 test("existing custom agent profiles are not overwritten", (t) => {
   const f = fixture(t);
-  const before = '{"chat.tools.terminal.terminalProfile.linux":{"path":"/custom/shell"}}';
+  const os = process.platform === "darwin" ? "osx" : "linux";
+  const before = `{"chat.tools.terminal.terminalProfile.${os}":{"path":"/custom/shell"}}`;
   writeFileSync(f.settings, before);
   const result = cli(f);
   assert.equal(result.status, 1);
