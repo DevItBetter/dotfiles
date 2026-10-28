@@ -1,7 +1,0 @@
-[tools]
-"npm:diff-so-fancy" = "1.4.12"
-
-[_]
-label = "diff-so-fancy Git pager"
-groups = ["core"]
-requires = ["node"]

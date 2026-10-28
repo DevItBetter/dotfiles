@@ -1,0 +1,6 @@
+#!/bin/bash
+# VS Code agent terminal profile. Keep the basename "bash" so VS Code enables
+# its shell integration.
+set -euo pipefail
+dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "$dir/node-lts" "$dir/command-launcher.mjs" /bin/bash "$@"

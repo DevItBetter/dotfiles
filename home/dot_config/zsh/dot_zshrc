@@ -1,0 +1,36 @@
+# Interactive zsh configuration. Machine-only settings go in $ZDOTDIR/local.zsh,
+# which chezmoi does not manage.
+_zconf="$ZDOTDIR/conf.d"
+
+if [[ -n ${TILIX_ID:-}${VTE_VERSION:-} && -r /etc/profile.d/vte.sh ]]; then
+  source /etc/profile.d/vte.sh
+fi
+
+source "$_zconf/exports.zsh"
+
+if (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi
+
+# Plugins call compdef while loading, but compinit must run after they extend
+# fpath. Queue those calls; completions.zsh runs compinit and replays them.
+typeset -ga _zconf_compdefs
+compdef() { _zconf_compdefs+=("${(j: :)${(q)@}}") }
+if [[ -r "$ZDOTDIR/.antidote/antidote.zsh" ]]; then
+  source "$ZDOTDIR/.antidote/antidote.zsh"
+  antidote load
+fi
+
+for _zconf_file in history setopt completions bindkeys fzf aliases functions; do
+  source "$_zconf/$_zconf_file.zsh"
+done
+if is_wsl && [[ -r "$_zconf/wsl2-ssh-agent.zsh" ]]; then
+  source "$_zconf/wsl2-ssh-agent.zsh"
+fi
+
+if (( $+commands[starship] )); then
+  eval "$(starship init zsh)"
+fi
+
+[[ -r "$ZDOTDIR/local.zsh" ]] && source "$ZDOTDIR/local.zsh"
+unset _zconf _zconf_file

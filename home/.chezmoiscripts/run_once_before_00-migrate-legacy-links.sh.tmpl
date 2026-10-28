@@ -1,0 +1,48 @@
+#!/bin/bash
+# Before chezmoi, ~/dotfiles was symlinked into $HOME. Remove those links and
+# the generated mise fragments, and keep any machine-local zsh overrides.
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}"
+zdotdir="$config/zsh"
+old_root=""
+if [[ -L $HOME/.zshrc ]]; then
+  old_root="$(dirname "$(dirname "$(readlink "$HOME/.zshrc")")")"
+fi
+
+unlink_legacy() { # path, expected suffix of its link target
+  if [[ -L $1 && $(readlink "$1") == *"$2" ]]; then
+    rm -- "$1"
+    printf 'Removed legacy link %s\n' "$1"
+  fi
+}
+unlink_legacy "$HOME/.zshrc" /zsh/zshrc
+unlink_legacy "$HOME/.zshenv" /zsh/zshenv
+unlink_legacy "$HOME/.gitconfig" /git/gitconfig
+unlink_legacy "$HOME/.tmux.conf" /tmux/tmux.conf
+unlink_legacy "$HOME/.local/bin/tmux-pane-bg" /tmux/bin/tmux-pane-bg
+unlink_legacy "$config/starship.toml" /starship/starship.toml
+unlink_legacy "$config/alacritty/alacritty.toml" /alacritty/alacritty.toml
+unlink_legacy "$HOME/.cursor/rules" /cursor/rules
+unlink_legacy "$config/opencode/plugins/command-environment.js" /agents/opencode.js
+unlink_legacy "$config/opencode/plugins/command-environment.mjs" /agents/command-environment.mjs
+unlink_legacy "$HOME/.pi/agent/extensions/command-environment.js" /agents/pi.js
+unlink_legacy "$HOME/.pi/agent/extensions/command-environment.mjs" /agents/command-environment.mjs
+unlink_legacy "$config/mise/conf.d/00-dotfiles-settings.toml" /mise/settings.toml
+
+# Fragments written by the old mise tool selector.
+if [[ -f $config/mise/dotfiles-selection.json ]]; then
+  rm -f -- "$config"/mise/conf.d/10-dotfiles-*.toml "$config/mise/dotfiles-selection.json"
+  printf 'Removed old mise tool selection from %s\n' "$config/mise"
+fi
+rm -f -- "$HOME/.zsh_plugins.zsh"
+
+# Old local overrides move to $ZDOTDIR/local.zsh, which chezmoi leaves alone.
+for file in ${old_root:+"$old_root/zsh/config/work.zsh" "$old_root/zsh/config/local.zsh"} \
+    "$config/dotfiles/env.zsh" "$config/dotfiles/local.zsh"; do
+  if [[ -f $file ]] && ! grep -qsF "# from $file" "$zdotdir/local.zsh"; then
+    mkdir -p "$zdotdir"
+    { printf '\n# from %s\n' "$file"; cat -- "$file"; } >> "$zdotdir/local.zsh"
+    printf 'Copied %s into %s\n' "$file" "$zdotdir/local.zsh"
+  fi
+done

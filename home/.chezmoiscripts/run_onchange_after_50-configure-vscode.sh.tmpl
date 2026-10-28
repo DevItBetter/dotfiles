@@ -1,0 +1,23 @@
+#!/bin/bash
+# Point VS Code's agent terminals at the agent command environment.
+# configurator hash: {{ include "dot_local/share/agent-env/configure-vscode.mjs" | sha256sum }}
+set -uo pipefail
+agent_env="$HOME/.local/share/agent-env"
+configure() { # label, configurator arguments...
+  local label=$1
+  shift
+  if ! "$agent_env/node-lts" "$agent_env/configure-vscode.mjs" --python "$@"; then
+    printf 'Skipped %s. Fix the error above, then run:\n  %s\n' "$label" \
+      "$agent_env/node-lts $agent_env/configure-vscode.mjs --python $*" >&2
+  fi
+}
+{{- if eq .chezmoi.os "darwin" }}
+stable="/Applications/Visual Studio Code.app/Contents/Resources/app"
+insiders="/Applications/Visual Studio Code - Insiders.app/Contents/Resources/app"
+if [[ -d $stable ]]; then configure "VS Code" --app-root "$stable"; fi
+if [[ -d $insiders ]]; then configure "VS Code Insiders" --insiders --app-root "$insiders"; fi
+{{- else }}
+if command -v code >/dev/null 2>&1; then configure "VS Code"; fi
+if command -v code-insiders >/dev/null 2>&1; then configure "VS Code Insiders" --insiders; fi
+{{- end }}
+exit 0

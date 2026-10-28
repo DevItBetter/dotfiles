@@ -1,0 +1,22 @@
+{{- $tools := includeTemplate "mise-tools" . | splitList "\n" }}
+{{- if not .desktop }}
+.config/alacritty
+{{- end }}
+{{- if not .wsl }}
+.config/zsh/conf.d/wsl2-ssh-agent.zsh
+{{- end }}
+{{- if not (has "opencode" $tools) }}
+.config/opencode
+{{- end }}
+{{- if not (has "pi" $tools) }}
+.pi
+{{- end }}
+{{- if not (has "claude-code" $tools) }}
+.claude
+{{- end }}
+{{- if not (has "copilot" $tools) }}
+.local/share/agent-env/copilot
+{{- end }}
+{{- if not (stat (joinPath .chezmoi.homeDir ".cursor")) }}
+.cursor
+{{- end }}

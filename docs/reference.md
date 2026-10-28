@@ -1,495 +1,267 @@
-# Configuration reference
+# Reference
 
-Run commands from the checkout root. Examples using `~/dotfiles` also work from
-another checkout location after adjusting that path.
+## Layout
 
-## Deploy configuration
+`.chezmoiroot` tells chezmoi that the source state is [home/](../home/). The rest
+of the repository (docs, examples, fonts, tests) is not deployed.
 
-Configuration deployment, system provisioning, and developer-tool installation
-are separate operations. Linux desktops, headless Linux hosts, WSL, macOS, and
-containers use the same source. Native Windows is not supported.
+| Source | Becomes |
+| --- | --- |
+| `home/.chezmoi.toml.tmpl` | `~/.config/chezmoi/chezmoi.toml`: the `chezmoi init` questions and detected facts |
+| `home/.chezmoidata/` | Template data: system packages and mise profiles |
+| `home/.chezmoitemplates/mise-tools` | Resolves a profile to its tool names, shared by the templates below |
+| `home/.chezmoiexternal.toml` | Antidote and TPM, cloned and refreshed weekly |
+| `home/.chezmoiignore` | Skips files the machine doesn't need |
+| `home/.chezmoiscripts/` | Install and setup scripts |
+| `home/dot_zshenv` | `~/.zshenv`, which only sets `ZDOTDIR` and `PATH` |
+| `home/dot_config/zsh/` | `~/.config/zsh`: `.zshrc`, plugin list, `conf.d/*.zsh` |
+| `home/dot_config/git/` | `~/.config/git/config` and `ignore` |
+| `home/create_dot_gitconfig` | `~/.gitconfig`, created once for machine-local settings |
+| `home/dot_config/mise/config.toml.tmpl` | `~/.config/mise/config.toml` for the chosen profile |
+| `home/dot_local/share/agent-env/` | The agent command environment (see below) |
 
-Clone this repository anywhere and run these commands from its root.
-Deployment needs Python 3.11 or newer, Git, and chezmoi. Install those with your
-OS package manager, or use an existing mise installation to install the pinned
-chezmoi version:
+File names follow chezmoi's
+[source state attributes](https://www.chezmoi.io/reference/source-state-attributes/):
+`dot_` becomes `.`, `executable_` sets the mode, `.tmpl` files are templates,
+`create_` files are written only if missing, and `modify_` files edit an
+existing file.
 
-```sh
-mise install chezmoi@2.73.3
-mise exec chezmoi@2.73.3 -- python3 script/deploy.py diff
-```
+### Template data
 
-With chezmoi on `PATH`:
+`chezmoi init` stores `name`, `email`, `profile`, and `desktop` from its prompts,
+and detects `wsl` and `container`. `desktop` defaults to true on macOS and on
+Linux with a display, and false over SSH, in containers, and on WSL. To see the
+values, run `chezmoi data`.
 
-```sh
-python3 script/deploy.py diff
-python3 script/deploy.py apply
-# Optional desktop and agent configuration:
-python3 script/deploy.py diff --with terminal --with tmux --with agents
-python3 script/deploy.py apply --with terminal --with tmux --with agents
-```
+`.chezmoiignore` uses them:
 
-Defaults deploy the shell, Git, and prompt configuration only. Additional
-capabilities are `tmux`, `terminal`, `agents`, and `cursor`. Repeat `--with` or
-`--without` to change them. Selections persist after a successful apply.
-Deselection stops managing that capability; it does not delete installed files,
-remove plugins, or uninstall tools. Remove unwanted integrations explicitly.
-WSL users should install fonts and terminal applications on whichever OS hosts
-their terminal, usually Windows.
+- Alacritty is deployed only when `desktop` is true.
+- `conf.d/wsl2-ssh-agent.zsh` is deployed only on WSL.
+- OpenCode, Pi, Claude Code, and Copilot integration files are deployed only when
+  the profile installs that agent.
+- Cursor rules are deployed only if `~/.cursor` exists.
 
-`diff` and `status` do not write to destination directories or persistent state.
-`apply` preflights every managed file before writing. Unknown files and edited
-managed files stop deployment. Review `diff`, then use `apply --adopt` only if you
-want to back those files up and replace them. Directories are never replaced
-with files. Old directory links into this checkout, such as Cursor's rules
-directory, are backed up and detached before writing below them. Other
-symlinked parent directories require manual review. Backups use `.before-dotfiles`, with numbered
-suffixes when needed. No deployment command installs packages, downloads plugins,
-changes the login shell, or modifies credentials.
+### Scripts
 
-The wrapper renders the small chezmoi source trees under `chezmoi/` into their
-application-specific destinations. Application configuration remains in its
-existing directory, with no duplicate copies to edit. Use `script/deploy.py`
-rather than bare `chezmoi apply`, since the wrapper supplies machine paths,
-capabilities, and conflict checks. Deployed files are regular files.
-Rerun deployment after updating source. The shell's generated entry points
-reference this checkout, so retain it and rerun deployment after moving it.
-Agent settings configured by the separate VS Code and Claude Code commands
-also need reconfiguration after a move.
+chezmoi runs these in name order. `before` scripts run before files are written,
+`after` scripts after. A `run_once_` script runs once per machine. A
+`run_onchange_` script runs again when its rendered content changes, and most of
+them embed a hash of the file they depend on for that reason.
 
-Paths honor `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, `ZDOTDIR`, and
-`PI_CODING_AGENT_DIR`. Values must be absolute. Deployment records and chezmoi
-databases live in `${XDG_STATE_HOME:-~/.local/state}/dotfiles`.
-Shell startup honors `MISE_DATA_DIR`, `MISE_SHIMS_DIR`, and `XDG_DATA_HOME`.
+| Script | Does |
+| --- | --- |
+| `run_once_before_00-migrate-legacy-links` | Removes links from the pre-chezmoi setup (see [Migrating](#migrating-from-the-symlink-setup)) |
+| `run_onchange_before_10-install-packages` | Installs `packages.yaml` with brew, apt, dnf, pacman, or zypper |
+| `run_once_before_20-install-mise` | Installs mise to `~/.local/bin` (Homebrew on macOS) |
+| `run_onchange_after_30-mise-install` | `mise install` whenever the mise config changes |
+| `run_onchange_after_40-zsh-plugins` | Builds the Antidote bundle when the plugin list changes |
+| `run_onchange_after_45-tmux-plugins` | Runs TPM's `install_plugins` when `~/.tmux.conf` changes |
+| `run_onchange_after_50-configure-vscode` | Configures VS Code and VS Code Insiders, if installed |
+| `run_once_after_90-login-shell` | Runs `chsh` to zsh when there is a terminal to ask for a password |
 
-### Migrate an existing installation
+To apply files without running scripts, use `chezmoi apply --exclude scripts`.
+Without sudo, the package script prints the missing packages and carries on.
 
-Preview first. Symlinks pointing into this checkout are backed up and replaced
-with regular deployed files. Old directory links into this checkout, such as
-Cursor's rules directory, are copied locally before their managed children are
-updated. The original directory link is backed up. Other configurations require
-explicit adoption.
-The global Git file is preserved as a writable local file, with an include of
-the deployed shared configuration. Existing local identity and relative includes
-retain precedence. `git config --global` no longer writes into the repository.
-Existing `~/.gitconfig.local` files are left untouched.
-Foreign Git config symlinks must be detached to local files before migration;
-`--adopt` does not replace them.
+## Packages and tools
 
-Old `.backup` files remain untouched. If an earlier failed setup lost your Git
-identity, review those backups and restore the correct identity into
-`~/.gitconfig.local` yourself; migration does not guess among old backups.
-The old font-directory link is also left untouched. Fonts remain in the
-repository for existing users but are no longer installed automatically.
-Install only the font families needed by your terminal on each machine.
+System packages are for things mise can't or shouldn't install: zsh, Git, curl,
+Python 3, fzf, tmux, ripgrep, less, ShellCheck, Perl's Time::HiRes, and
+Alacritty on desktops. `packages.names` maps a logical name to each package
+manager's spelling, and `packages.casks` lists Homebrew casks.
 
-`script/setup.sh` now forwards to configuration deployment. Its old tool-profile
-arguments have moved to `script/configure-mise.sh`.
+Everything else comes from mise. To add a tool, add its TOML line under
+`mise.tools` in [mise.yaml](../home/.chezmoidata/mise.yaml), then add its name to
+a group or a profile's `tools` list. `chezmoi apply` rewrites
+`~/.config/mise/config.toml` and runs `mise install`. For a tool that only one
+machine needs, use `~/.config/mise/config.local.toml` instead. mise reads that
+file after `config.toml`, and chezmoi leaves it alone.
 
-### Optional system provisioning
+## Shell
 
-Provisioning previews by default:
+zsh reads `~/.zshenv` first. It sets `ZDOTDIR=~/.config/zsh` and puts
+`~/.local/bin` and mise's shims at the front of `PATH`. Non-interactive shells
+stop there.
 
-```sh
-bash script/provision.sh
-bash script/provision.sh --plugins --login-shell
-# Explicitly authorize the previewed changes:
-bash script/provision.sh --apply --plugins --login-shell
-```
+Interactive shells then read `~/.config/zsh/.zshrc`, which runs in this order:
 
-The baseline contains shell utilities, Git, curl, Python, fzf, tmux, ripgrep,
-less, ShellCheck, and Perl support for Git's pager.
-Alacritty is added on macOS and on Linux machines with a local X11 or Wayland
-session. SSH sessions, containers, and WSL skip it; `--terminal` forces it and
-`--no-terminal` leaves it out. `--plugins` downloads Antidote and TPM and prepares
-the Zsh plugin cache. `--login-shell` explicitly requests an account shell change.
-System packages require root or sudo on Linux. On macOS, install Homebrew first;
-GUI applications use casks. Containers can deploy configuration without sudo or
-changing accounts. Arch provisioning uses the existing package database without
-silently refreshing it; perform full system upgrades separately.
+1. `conf.d/exports.zsh`, then `mise activate zsh`.
+2. Antidote loads the plugins in `.zsh_plugins.txt`. If Antidote is missing, the
+   shell starts without plugins.
+3. History and options, then `conf.d/completions.zsh`, which runs `compinit`
+   once with its dump in `~/.cache/zsh`. Plugins that call `compdef` before then
+   are queued and replayed afterward.
+4. Key bindings, fzf, aliases, and functions from `conf.d/`.
+5. `conf.d/wsl2-ssh-agent.zsh` on WSL.
+6. starship, then `~/.config/zsh/local.zsh` if it exists.
 
-Install mise through its documented OS-specific installation procedure, then
-select developer tools separately as described below. Provisioning does not
-guarantee Python 3.11 on old distributions; upgrade Python explicitly if needed.
-Chezmoi is not assumed to be available from every distribution's repositories.
-Install the pinned mise tool before deploying configuration.
+Put machine-specific settings, work aliases, and things like Conda
+initialization in `local.zsh`.
 
-## GitHub setup
+## Git
 
-The tracked Git config defaults to my personal GitHub identity and assumes a
-single SSH key on `github.com`.
+`~/.config/git/config` holds the shared settings and the identity from
+`chezmoi init`. Git reads `~/.gitconfig` after it, so settings there win.
+chezmoi creates `~/.gitconfig` once with only comments and never touches it
+again. Credential helpers belong there too.
 
-Machines that use multiple GitHub SSH keys should add machine-local overrides:
+For a second GitHub account on one machine:
 
-1. Copy `examples/git/gitconfig.local.example` to `~/.gitconfig.local`.
-2. Copy `examples/git/gitconfig.work.example` to `~/.gitconfig.work` and set your
-   work identity. Enable the matching `includeIf` block in `~/.gitconfig.local`
-   and adjust its directory pattern to match your work checkouts.
-3. Add the `github-work` host from `examples/ssh/config.github-work.example`
-   to `~/.ssh/config` and set its key path. Enable the URL rewrites you need in
-   `~/.gitconfig.work`.
+1. Copy [gitconfig.work.example](../examples/git/gitconfig.work.example) to
+   `~/.gitconfig.work` and set the work identity.
+2. Add the `includeIf` block from [gitconfig.example](../examples/git/gitconfig.example)
+   to `~/.gitconfig`, pointing at your work directory.
+3. Add the `github-work` host from
+   [config.github-work.example](../examples/ssh/config.github-work.example) to
+   `~/.ssh/config`, and enable the URL rewrites in `~/.gitconfig.work`.
 
-Machines with one SSH key can use the default configuration.
+## Agent command environment
 
-Shared Git colors use `auto`, and pushing defaults to `simple` rather than
-all matching branches. Branch-specific defaults no longer assume `master`.
-Credential helpers are machine-local; configure the OS credential manager in
-`~/.gitconfig` rather than sharing a plaintext credential-store policy.
+Coding agents run shell commands with whatever environment the agent inherited.
+That causes two problems:
 
-## Shells and tools
+- mise shims prepend every tool's install directory to the `PATH` of each child
+  process. An agent started through a shim hands that long `PATH` to every
+  command, so project `.mise.toml` versions stop applying.
+- Git pagers and colors turn command output into escape codes and blocked
+  `less` sessions.
 
-The tool selector requires Python 3.11
-or newer with the standard-library `tomllib` module. The TUI also uses Python's
-`curses` module. No extra Python packages are needed.
+[command-environment.mjs](../home/dot_local/share/agent-env/command-environment.mjs)
+fixes both. It puts mise's shim directory first, removes mise install
+directories from `PATH`, and sets `GIT_PAGER=cat` and per-command
+`GIT_CONFIG_*` color overrides. Color is turned off per command because a setting
+such as `color.branch = always` beats `color.ui`. Other `PATH` entries and Git
+overrides you set yourself stay put. This is process configuration, not a
+sandbox.
 
-```sh
-bash script/configure-mise.sh --install
-```
+Each agent gets it differently:
 
-Use Space to check profiles, groups, or individual tools. Groups show `[-]` when
-partially selected. Use `/` to filter, arrows or `j`/`k` to move, and Enter or
-`s` to save. Press `q` or Escape to cancel without saving or installing.
-Choosing **Core only** clears the optional selections.
+| Agent | How |
+| --- | --- |
+| OpenCode | Plugin at `~/.config/opencode/plugins/command-environment.js` that runs shell commands in `/bin/bash` with the environment |
+| Pi | Extension at `~/.pi/agent/extensions/command-environment.js` that sets the environment on the Pi process, so its Bash tool and `!` commands inherit it |
+| Claude Code | `~/.claude/settings.json` gets `env.CLAUDE_CODE_SHELL=/bin/bash` and a `SessionStart` hook that writes the environment to `$CLAUDE_ENV_FILE` |
+| Copilot CLI | zsh aliases `copilot` to `~/.local/share/agent-env/copilot`, which execs Copilot under Node LTS with the environment |
+| VS Code | See [VS Code](#vs-code) |
 
-Core tools are always selected: chezmoi, Node LTS, Python, uv, Starship, and
-`diff-so-fancy`. The other tools are optional:
+All of them run Node LTS through `agent-env/node-lts`, which asks
+`mise which --tool node@lts` for the real binary rather than using a shim. A
+project's Node version does not affect them. If Node LTS is missing, it fails
+with a message instead of installing it.
 
-| Profile | Coding agents | Other groups and tools |
-| --- | --- | --- |
-| `terumo` | OpenCode, Pi, Copilot | Development, MarkItDown, Herdr |
-| `gbl` | OpenCode, Pi, Copilot, Claude Code, Codex, Gemini CLI | Development, jmunch, Herdr, Temporal |
-| `core` | None | Core only |
+The Claude Code settings file is a
+[modify template](https://www.chezmoi.io/user-guide/manage-different-types-of-file/#manage-part-but-not-all-of-a-file):
+chezmoi merges the two settings into your existing file and keeps everything else.
+Re-applying adds nothing.
 
-Development contains Bun and pnpm. The `jmunch` group contains jcodemunch,
-jdatamunch, and jdocmunch MCP servers. The `markitdown` group contains the CLI
-and MCP server. The `workflow` group contains Herdr and Temporal. The
-`coding-agents` group contains all six agents. The `personal` group contains
-`yt-dlp`; neither company profile selects it. Installing a tool does not copy
-or configure its license, credentials, or other personal settings.
+The Copilot alias exists only when the launcher is deployed, which happens only
+when the profile includes Copilot. Outside zsh, run
+`~/.local/share/agent-env/copilot` directly. The launcher preserves arguments,
+stdin, signals, and exit status, and it handles mise's npm shell wrappers.
 
-For unattended setup, choose a profile and explicit additions:
+After changing these files, restart the agent. In OpenCode use its reload
+command; in Pi use `/reload`. Claude Code picks up settings in new sessions.
 
-```sh
-bash script/configure-mise.sh --profile terumo --with jmunch --with claude-code --install
-bash script/configure-mise.sh --profile gbl --without gemini-cli --install
-bash script/configure-mise.sh --profile core --with pi --with claude-code --install
-```
+## VS Code
 
-Repeat `--profile` to combine profiles. `--with` and `--without` accept a group
-or tool ID. If both have the same name, the group wins. Use `tool:markitdown`
-to select only the CLI, rather than both MarkItDown tools. Exclusions override
-profiles and groups, but core tools and dependencies remain selected. Adding
-a profile or group again clears exclusions for its members. `--profile` starts
-a new selection; additions without it extend the machine's saved selection.
-Add `--edit` to review command-line choices in the TUI.
+`run_onchange_after_50-configure-vscode` runs
+[configure-vscode.mjs](../home/dot_local/share/agent-env/configure-vscode.mjs)
+with `--python` for each installed edition. It needs VS Code 1.142 or newer and
+Node LTS from mise. If it can't configure an edition, it prints the error and
+the command to rerun, and the apply continues.
 
-### Change a machine's tool selection
+It sets four user settings (on macOS the profile keys end in `.osx`):
 
-The standalone selector changes only mise configuration. Use `--install` to
-install the chosen tools as well, without rerunning the rest of setup:
+- `chat.tools.terminal.terminalProfile.linux` and
+  `terminal.integrated.agentHostProfile.linux` point at
+  `~/.local/share/agent-env/bin/bash`. That launcher starts Bash with the agent
+  environment, skips your rc and login files, and keeps VS Code's shell
+  integration. Your own terminals keep their usual shell.
+- `chat.agentHost.copilot.runtimePath` points at a launcher in
+  `~/.local/share/dotfiles/vscode/` that starts the editor's bundled Copilot
+  SDK runtime with the agent environment.
+- `python.defaultInterpreterPath` becomes mise's Python `latest`, resolved to the
+  real binary. A custom value such as `${workspaceFolder}/.venv` is left alone,
+  and saved per-workspace interpreter choices are unchanged.
 
-```sh
-bash ~/dotfiles/script/configure-mise.sh --install
-bash ~/dotfiles/script/configure-mise.sh --profile gbl --with markitdown --dry-run
-bash ~/dotfiles/script/configure-mise.sh --list
-```
-
-`--dry-run` never saves or installs. Unattended runs must specify selection arguments
-or `--keep-current`; they never guess a profile. `--keep-current` reapplies the
-saved selection, or imports recognized tools from an older global config.
-
-Tool definitions live in `mise/tools/*.toml`. The selector creates local
-`include` fragments for selected definitions in `~/.config/mise/conf.d/`, and
-links `mise/settings.toml` there for shared settings.
-`dotfiles-selection.json` beside that directory remembers this machine's
-profiles, groups, and individual overrides. `MISE_CONFIG_DIR` and
-`XDG_CONFIG_HOME` are respected. `MISE_GLOBAL_CONFIG_FILE` must be unset because
-it disables config fragments.
-
-Keep device-specific tools and version overrides in `~/.config/mise/config.toml`
-or `config.local.toml`. These regular files override the selected defaults and
-are not managed by the selector. Tools declared there still apply even if
-unchecked in the TUI. Normal `mise use -g` tool writes stay outside dotfiles.
-For an override that should survive selector changes, target the local file
-explicitly with `mise use --path ~/.config/mise/config.local.toml node@22`.
-If mise edits a managed fragment, the selector refuses to replace or remove it.
-Move its overrides to `config.local.toml`, then remove only that generated
-fragment. Rerun the selector to recreate it.
-Project-specific runtime versions belong in the project's mise configuration.
-
-The old dotfiles-owned global config symlink is migrated to a regular local
-file after its contents are backed up. Custom changes stop migration for manual
-review. If updating dotfiles already removed the old target, setup backs up the
-link itself. Choose a profile or use the TUI; `--keep-current` cannot import
-tools from that missing file.
-
-Switching profiles removes only the selector's unchanged fragments, never
-unmanaged files or installed tools. Existing installations may still be
-reachable through shims; deselection is not an uninstall or an access policy.
-Review and uninstall unwanted tools separately.
-
-If catalog entries are retired, saved selections warn and discard those entries.
-Obsolete generated fragments are removed only if they still match their recorded
-managed content; edited fragments still stop the selector for review.
-Chezmoi is pinned because deployment tests depend on its behavior. Other tools
-retain their existing `latest` or `lts` policy. This is a shared configuration,
-not a fully version-locked operating environment.
-
-The two MarkItDown tools use isolated Python 3.14 environments because their
-ONNX Runtime dependency does not yet provide Python 3.15 wheels. This leaves
-the global Python default on `latest`.
-
-### Add a tool or group
-
-Add one file under `mise/tools/`; its filename is the tool ID. For example:
-
-```toml
-[tools]
-example = "latest"
-
-[_]
-label = "Example CLI"
-groups = ["development"]
-requires = ["node"] # Omit if no catalog tools are required.
-```
-
-Mise ignores the `[_]` metadata; the selector uses it for labels, groups, and
-dependencies. Files are discovered automatically. A tool can belong to several
-groups. Define new groups or compose profiles in `mise/catalog.toml`.
-Rerun the selector to review and apply new members of saved groups or profiles.
-They are not configured or installed just because dotfiles was updated. Edits to
-the versions of already selected tools take effect through their existing includes.
-
-Run the selector regression tests with Python 3.11 or newer:
+The configurator keeps JSONC comments and other settings, backs up
+`settings.json` as `settings.json.before-dotfiles-agents` before its first
+change, and refuses symlinked settings files and conflicting values. To run it
+by hand:
 
 ```sh
-python3 -m unittest discover -s script/tests -p 'test_mise_config.py'
+~/.local/share/agent-env/node-lts ~/.local/share/agent-env/configure-vscode.mjs --dry-run
+~/.local/share/agent-env/node-lts ~/.local/share/agent-env/configure-vscode.mjs --insiders
 ```
 
-### Interactive shell
+Restart VS Code afterward and open new agent sessions. Rerun after a VS Code
+update moves the bundled runtime: `chezmoi apply` won't notice, because the
+script reruns only when the configurator changes. Remote hosts, containers, and
+cloud sessions are not configured.
 
-Interactive terminals use Zsh with mise activation. Noninteractive Zsh commands
-use the quiet environment in `zsh/zshenv`, without loading interactive plugins.
-Provisioning with `--plugins` prepares the Antidote cache. Shell startup only loads the existing
-cache. After editing `zsh/zsh_plugins.txt`, rebuild it explicitly:
+## tmux
+
+`~/.tmux.conf` declares the plugins. TPM is cloned to `~/.tmux/plugins/tpm` as
+an external, and the plugins are installed when the config changes. Inside
+tmux, the prefix (Ctrl+/ or Alt+z) followed by `r` reloads the config, and the
+prefix followed by `I` installs plugins. tmux-resurrect and tmux-continuum save
+sessions every 15 minutes and restore them when tmux starts. Overrides go in
+`~/.tmux.conf.local`.
+
+## Migrating from the symlink setup
+
+Before chezmoi, `~/dotfiles` was symlinked into `$HOME`, and a Python wrapper
+generated the mise config. To switch a machine over:
 
 ```sh
-bash ~/dotfiles/script/prepare-zsh.sh
+cd ~/dotfiles && git pull
+chezmoi init --source ~/dotfiles   # answer the questions
+chezmoi diff                       # review
+chezmoi apply
 ```
 
-The preparation command may download missing plugins. A failed rebuild leaves
-the previous cache intact. Open a new terminal to load the rebuilt cache.
+The first apply runs `run_once_before_00-migrate-legacy-links`, which:
 
-The tool selector installs Git's `diff-so-fancy` pager through mise so it is
-available without Antidote. Agents and editors need mise's shims on `PATH`:
+- Removes links in `$HOME` that point into the old checkout layout, such as
+  `~/.zshrc -> ~/dotfiles/zsh/zshrc`. Links pointing anywhere else are kept.
+- Removes the generated `~/.config/mise/conf.d/10-dotfiles-*.toml` files,
+  `dotfiles-selection.json`, and `~/.zsh_plugins.zsh`. Your other `conf.d` files
+  are kept.
+- Appends `zsh/config/work.zsh` and `zsh/config/local.zsh` from the old checkout,
+  and `~/.config/dotfiles/{env,local}.zsh`, to `~/.config/zsh/local.zsh`. Each
+  file is copied once.
+
+The old `~/.gitconfig.local` is no longer included. Move its contents into
+`~/.gitconfig`. VS Code settings that point at the old `agents/bash` path are
+updated in place. The old `~/.antidote` checkout can be deleted once the new
+shell works.
+
+## Testing
 
 ```sh
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+node --test tests/*.test.mjs
 ```
 
-For custom mise storage, use its configured shim directory instead.
-Put early environment choices, including optional Conda initialization, in
-`${XDG_CONFIG_HOME:-~/.config}/dotfiles/env.zsh`. Put final interactive overrides
-in `dotfiles/local.zsh` under that configuration directory. The old checkout-local
-work and local files still load for compatibility, but new local files should
-live outside the checkout. The default editor is `vi` unless already set.
-GNU and macOS `ls` use their own color flags. The WSL SSH bridge is enabled only
-when its local executable is installed.
+The tests need `chezmoi` on `PATH` (or `CHEZMOI=/path/to/chezmoi`), and zsh for
+the shell tests. Each test runs `chezmoi init` and `chezmoi apply` into a
+temporary `HOME`, skipping scripts and externals, and checks the result:
 
-### Agent command environments
+- the mise config for each profile, and which agent files each profile gets;
+- the Git identity, and that `~/.gitconfig` survives later applies;
+- the Claude Code settings merge;
+- that a second apply changes nothing;
+- the legacy migration;
+- that interactive zsh starts with nothing on stderr, including with
+  `TERM=dumb`;
+- the agent launchers, plugins, and VS Code configurator, run from the
+  deployed copies.
 
-The `agents` deployment capability copies the adapters in `agents/` to OpenCode's global plugins directory and
-Pi's user extensions directory. Both use `agents/command-environment.mjs` to put
-mise shims before inherited tool installation paths and disable Git paging and
-color. Color is disabled per command as well as through `color.ui`, because a
-setting such as `color.branch = always` overrides `color.ui`. Existing Git
-environment overrides and other PATH entries remain intact. This is process
-configuration, not a sandbox.
-
-The OpenCode V2 plugin selects `/bin/bash` for shell commands, independently of
-your login shell. Pi already uses noninteractive Bash by default; its extension
-normalizes the Pi process environment so built-in tools, `!` / `!!` commands,
-and extension subprocesses inherit the same defaults. Extensions that supply
-their own environment or remote execution backend can override them.
-
-Interactive Zsh aliases `copilot` to `script/copilot.sh` only when mise resolves
-both Copilot and Node LTS to installed executables. A leftover shim does not
-enable the alias. Reloading the aliases file after an uninstall removes this
-alias. The launcher checks availability again each time it runs and never
-installs missing tools.
-
-The launcher uses `agents/copilot.mjs` and the shared environment helper before
-starting the npm-managed Copilot with Node LTS, independent of the project's
-Node version. It supports both JavaScript symlinks and mise's aube shell wrappers,
-resolving the wrapper's relative target without hard-coded install paths or versions.
-It replaces its own process, preserving arguments, standard I/O,
-signals, and exit status. Copilot's native Bash tool and other child processes
-inherit the normalized environment unless they override it. No `BASH_ENV` or
-Copilot settings changes are needed.
-
-Outside interactive Zsh, invoke the launcher explicitly:
+An opt-in test drives VS Code's bundled Copilot SDK Bash tool inside its
+native sandbox, without model requests:
 
 ```sh
-bash ~/dotfiles/script/copilot.sh [COPILOT_ARGUMENTS...]
+VSCODE_APP_ROOT=/usr/share/code/resources/app node --test tests/vscode-sdk.test.mjs
 ```
 
-The adapters target Unix systems, including WSL. OpenCode uses
-`$XDG_CONFIG_HOME/opencode/plugins`, falling back to `~/.config/opencode/plugins`.
-Pi uses `$PI_CODING_AGENT_DIR/extensions`, falling back to `~/.pi/agent/extensions`.
-No model, theme, authentication, or session files are linked. A custom Pi
-`shellPath` or `shellCommandPrefix` remains device-local and can change its shell
-behavior. Do not source interactive Zsh configuration from those settings.
-
-Restart OpenCode or use its reload command after installation. In Pi, use
-`/reload` or restart. Restart Pi after removing the extension to clear its
-process-level environment changes.
-
-Claude Code integration is opt-in because it edits Claude Code's user settings:
-
-```sh
-node ~/dotfiles/script/configure-claude-code.mjs --dry-run
-node ~/dotfiles/script/configure-claude-code.mjs
-```
-
-It sets `env.CLAUDE_CODE_SHELL` to `/bin/bash`, so the Bash tool snapshots the
-stock `~/.bashrc` instead of interactive Zsh configuration, and adds a
-`SessionStart` hook that runs `script/claude-code-env.sh`. The hook resolves Node
-LTS through mise offline and writes the shared environment as `export` lines to
-`$CLAUDE_ENV_FILE`, which Claude Code sources before every Bash command. This
-applies however Claude Code starts: terminal, remote control, IDE, or desktop.
-Hooks and MCP servers keep Claude Code's own environment.
-
-The configurator uses `$CLAUDE_CONFIG_DIR/settings.json`, falling back to
-`~/.claude/settings.json`; `--settings` selects another file. It keeps unrelated
-settings and hooks, backs the file up as `settings.json.before-dotfiles-agents`
-before changing it, and refuses a different `CLAUDE_CODE_SHELL` or a symlinked
-settings file. Repeated runs make no further changes. Start a new session after
-configuring; running sessions keep their shell. To remove the integration,
-delete `env.CLAUDE_CODE_SHELL` and the `SessionStart` hook that runs
-`claude-code-env.sh`.
-
-Run the shared environment tests with:
-
-```sh
-node --test script/tests/*.test.mjs
-```
-
-For projects that require mise environment variables as well as tool versions,
-use `mise run` tasks or `mise exec -- COMMAND` from the project directory.
-
-### VS Code agents
-
-VS Code integration is opt-in and requires version 1.142 or newer and installed
-mise Node LTS. Configure stable VS Code first; Insiders has separate settings:
-
-```sh
-node ~/dotfiles/script/configure-vscode.mjs --dry-run
-node ~/dotfiles/script/configure-vscode.mjs
-# Optional, for VS Code Insiders:
-node ~/dotfiles/script/configure-vscode.mjs --insiders
-```
-
-To also use mise's installed Python `latest` as VS Code's default interpreter:
-
-```sh
-node ~/dotfiles/script/configure-vscode.mjs --python --dry-run
-node ~/dotfiles/script/configure-vscode.mjs --python
-```
-
-The optional `--python` flag resolves the real executable offline with
-`mise which --tool python@latest python`; it does not install Python or point
-the Python extension at a shim. It replaces an unset or system-Python default,
-but refuses to overwrite a custom default such as `${workspaceFolder}/.venv`.
-The resolved path stays in local settings, not dotfiles. Rerun if an interpreter
-update changes that path.
-
-VS Code remembers interpreter selections per workspace. Changing the default
-does not replace those saved selections. In an existing workspace still using
-system Python, run **Python: Select Interpreter**, choose **Enter interpreter
-path**, and enter the path shown by the configurator. Keep project virtual
-environments selected where needed. Local settings do not configure remote
-Python extensions, containers, or Jupyter kernel selections.
-
-The configurator preserves JSONC comments and unrelated settings, backs up the
-settings file before changing it, and refuses conflicting agent settings or
-symlinked settings files. Repeated runs make no further changes. Settings and
-generated launchers stay machine-local; no models, credentials, themes,
-permissions, saved workspace interpreter selections, or MCP definitions are
-copied into dotfiles. Existing sandbox settings remain unchanged.
-
-By default, it sets three values in the selected edition's default user settings:
-
-- `chat.tools.terminal.terminalProfile.linux` selects `agents/bash` for Local
-  chat terminal commands. Your ordinary terminals still use their usual shell.
-- `terminal.integrated.agentHostProfile.linux` selects the same Bash launcher
-  for local Agent Host terminals, including `!` commands.
-- `chat.agentHost.copilot.runtimePath` selects a generated launcher for that
-  editor's **bundled Copilot SDK runtime**, not the mise-managed Copilot CLI.
-  This advanced, experimental setting normalizes the SDK process environment
-  before its native tools and child processes start. It leaves the SDK's terminal
-  and sandbox implementations in place. The runtime-path setting does not sync.
-
-On macOS the two profile keys use `osx` instead of `linux`. Use `--app-root` if
-the configurator cannot locate the editor's `resources/app` directory; use
-`--settings` for a nonstandard default user settings path. The configurator
-checks that the installed editor still exposes these settings before writing.
-
-Agent Host currently ignores profile `args` and `env`, and its SDK's default
-shell does not use that terminal profile at all. Both launch paths are needed.
-The Bash launcher skips personal rc/login files while preserving VS Code's
-injected shell integration. Neither launcher sets global `BASH_ENV` or changes
-the VS Code application's own environment.
-
-Restart VS Code after configuring it and create fresh agent terminals/sessions.
-Choose **Local** for extension-host chat, or **Copilot** for Agent Host sessions.
-Rerun configuration if a VS Code update moves the bundled runtime. Remote hosts,
-containers, and cloud sessions need their own environment setup; local settings
-do not configure them. Extensions and MCP servers launched outside these agent
-processes also retain their own environments.
-
-An optional live regression test runs the bundled SDK's Bash tool with native
-sandboxing enabled, temporary state, and no model requests. It requires the
-editor's sandbox prerequisites:
-
-```sh
-VSCODE_APP_ROOT=/usr/share/code/resources/app node --test script/tests/vscode-sdk.test.mjs
-```
-
-To remove the integration, remove the three settings above. If you used
-`--python`, also remove `python.defaultInterpreterPath` or choose another default.
-Backups are named
-`settings.json.before-dotfiles-agents`, with numbered suffixes when necessary.
-Do not restore an old backup over newer personal settings without reviewing it.
-
-## tmux plugins
-
-Provisioning with `--plugins` installs TPM into `~/.tmux/plugins/tpm`.
-Plugin declarations live in `tmux/tmux.conf`; installed plugin checkouts under
-`~/.tmux/plugins` are machine-local state and are not tracked in this repo.
-Use `~/.tmux.conf.local` for final machine-specific overrides.
-
-After setup, install the declared plugins with:
-
-```sh
-bash ~/.tmux/plugins/tpm/bin/install_plugins
-```
-
-In an existing tmux server, reload the configuration with the prefix followed by
-`r`, then press the prefix followed by `I` to install and load the plugins.
-The prefix is Ctrl+/ or Alt+z in this configuration.
-
-The tmux config uses `tmux-resurrect` and `tmux-continuum` to save sessions every 15 minutes and restore them when tmux starts.
-
-## Validation
-
-Tests use temporary homes and do not provision the host:
-
-```sh
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s script/tests -p 'test_*.py'
-node --test script/tests/*.test.mjs
-shellcheck -x -S warning script/*.sh script/lib/*.sh tmux/bin/tmux-pane-bg
-```
-
-Deployment tests require chezmoi; selector integration tests require mise.
-CI runs the contracts on Linux and macOS. WSL and containers share the headless
-deployment path, but native Windows and live package installation are not tested.
+CI runs the tests on Ubuntu and macOS, then bootstraps a fresh runner with
+`chezmoi init --apply` and checks that the tools are installed and that zsh
+starts cleanly.

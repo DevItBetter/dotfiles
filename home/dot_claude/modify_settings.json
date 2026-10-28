@@ -1,0 +1,15 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Merge the agent command environment into Claude Code's own settings:
+       run its Bash tool as /bin/bash, and have a SessionStart hook export the
+       environment to CLAUDE_ENV_FILE. Other settings are left alone. */ -}}
+{{- $command := `"$HOME/.local/share/agent-env/node-lts" "$HOME/.local/share/agent-env/claude-code.mjs"` -}}
+{{- $settings := dict -}}
+{{- if .chezmoi.stdin | trim }}{{ $settings = fromJson .chezmoi.stdin }}{{ end -}}
+{{- $settings = setValueAtPath "env.CLAUDE_CODE_SHELL" "/bin/bash" $settings -}}
+{{- $groups := list -}}
+{{- with (dig "hooks" "SessionStart" list $settings) }}{{ $groups = . }}{{ end -}}
+{{- $present := false -}}
+{{- range $groups }}{{ range (dig "hooks" list .) }}{{ if eq (toString (dig "command" "" .)) $command }}{{ $present = true }}{{ end }}{{ end }}{{ end -}}
+{{- if not $present }}{{ $groups = append $groups (dict "hooks" (list (dict "type" "command" "command" $command))) }}{{ end -}}
+{{- $settings = setValueAtPath "hooks.SessionStart" $groups $settings -}}
+{{ toPrettyJson $settings }}

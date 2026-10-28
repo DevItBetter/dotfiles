@@ -1,83 +1,74 @@
 # dotfiles
 
-Shared shell, Git, terminal, and agent preferences for Linux desktops, SSH hosts,
-WSL, containers, and macOS. Native Windows is not supported.
+My shell, Git, tmux, terminal, and coding-agent setup for Linux, WSL, macOS,
+SSH hosts, and containers. Native Windows is not supported.
 
-Chezmoi deploys configuration. Mise installs developer tools. System provisioning
-is separate and optional.
+It is a plain [chezmoi](https://www.chezmoi.io/) source directory. chezmoi
+renders the files in [home/](home/) into `$HOME`, installs system packages and
+[mise](https://mise.jdx.dev/), and mise installs the developer tools.
 
-## Quick start
-
-Clone this repository anywhere and run these commands from its root.
-Prerequisites are Git, Python 3.11 or newer, and
-[mise](https://mise.jdx.dev/getting-started.html).
+## New machine
 
 ```sh
-# Select developer tools and install them, including pinned chezmoi.
-bash script/configure-mise.sh --profile core --install
-
-# Preview configuration changes, then deploy.
-mise exec chezmoi@2.73.3 -- python3 script/deploy.py diff
-mise exec chezmoi@2.73.3 -- python3 script/deploy.py apply
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply DevItBetter/dotfiles
 ```
 
-Once chezmoi is on PATH, invoke `python3 script/deploy.py` directly.
-For work tools, choose `--profile terumo` or `--profile gbl` instead of `core`.
-Tool profiles do not select an OS, desktop applications, or agent settings.
+That clones this repository to `~/.local/share/chezmoi` and asks four questions:
+your Git name, your Git email, a mise tool profile, and whether this machine has
+a desktop. A desktop gets Alacritty. Answers are saved in
+`~/.config/chezmoi/chezmoi.toml` and are not asked again.
 
-## Select configuration
-
-Defaults deploy `shell`, `git`, and `prompt`. Add capabilities explicitly:
+To use a checkout somewhere else, such as `~/dotfiles`:
 
 ```sh
-python3 script/deploy.py diff --with tmux --with terminal --with agents
-python3 script/deploy.py apply --with tmux --with terminal --with agents
-python3 script/deploy.py status
+git clone git@github.com:DevItBetter/dotfiles.git ~/dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+~/.local/bin/chezmoi init --apply --source ~/dotfiles
 ```
 
-| Capability | Managed configuration |
+The first apply installs packages with the system package manager (it uses sudo
+when it is not root), installs mise and its tools, clones the zsh and tmux
+plugins, and offers to make zsh your login shell.
+
+## Day to day
+
+```sh
+chezmoi update       # git pull, then apply
+chezmoi diff         # what apply would change
+chezmoi apply        # write the changes
+chezmoi edit ~/.config/zsh/.zshrc   # edit the source file, not the copy
+chezmoi init         # answer the questions again
+```
+
+Files in `$HOME` are copies, not links. Edit the source with `chezmoi edit` or in
+the checkout (`chezmoi cd`), then apply. If you change a deployed file directly,
+`chezmoi diff` shows it, and `chezmoi re-add` copies it back into the source.
+
+## Profiles
+
+A profile picks the mise tools in `~/.config/mise/config.toml`. Every profile
+includes `core`.
+
+| Profile | Adds |
 | --- | --- |
-| `shell` | Zsh entry points referencing this checkout |
-| `git` | Shared Git defaults and global ignore patterns |
-| `prompt` | Starship |
-| `tmux` | tmux and the pane-background helper |
-| `terminal` | Alacritty |
-| `agents` | OpenCode and Pi environment adapters, not personal settings |
-| `cursor` | Cursor shell rules |
+| `core` | Node LTS, Python, uv, starship, diff-so-fancy, chezmoi |
+| `terumo` | Bun, pnpm, markitdown, OpenCode, Pi, Copilot CLI, herdr |
+| `gbl` | Bun, pnpm, every coding agent, the jmunch MCP servers, herdr, Temporal |
 
-Use the deployment wrapper rather than bare `chezmoi apply`. It supplies
-capabilities, custom directory paths, and legacy-file checks. `diff` and `status`
-are read-only. `apply` saves the capability selection; `--without` stops managing
-a capability but does not delete its files or uninstall tools.
+Profiles and tool versions live in
+[home/.chezmoidata/mise.yaml](home/.chezmoidata/mise.yaml). Change a machine's
+profile with `chezmoi init`, then `chezmoi apply`.
 
-## Migrate safely
+## Machine-local settings
 
-Preview first. Old links into this checkout are backed up and detached.
-Unknown or edited files stop deployment; `apply --adopt` backs them up before
-replacement. Existing local Git settings remain machine-owned.
+These files belong to the machine. chezmoi never overwrites them.
 
-Read the [migration instructions](docs/reference.md#migrate-an-existing-installation)
-before applying to an existing installation. They cover backup names, local
-overrides, legacy Git identities, and moving the checkout.
+| File | For |
+| --- | --- |
+| `~/.config/zsh/local.zsh` | Shell settings, loaded last |
+| `~/.gitconfig` | Git settings, read after `~/.config/git/config` |
+| `~/.config/mise/config.local.toml` | Extra tools for this machine |
+| `~/.tmux.conf.local` | tmux overrides |
 
-## Provisioning and reference
-
-System provisioning previews by default. It requires `--apply` to make changes:
-
-```sh
-bash script/provision.sh
-bash script/provision.sh --apply --plugins
-```
-
-Alacritty is included on macOS and Linux desktops and skipped over SSH, in
-containers, and on WSL. Use `--terminal` or `--no-terminal` to override.
-
-Login-shell changes require `--login-shell`. Containers and managed hosts can skip
-provisioning. Fonts are no longer installed automatically; install the font on
-the OS running your terminal, including the Windows host for a Windows-side WSL
-terminal.
-
-The [configuration reference](docs/reference.md) covers prerequisites, supported
-package managers, tool selection, local overrides, and opt-in Claude Code and
-VS Code integrations. [Validation commands](docs/reference.md#validation) exercise
-deployment in temporary homes; CI also runs on Linux and macOS.
+[docs/reference.md](docs/reference.md) covers the repository layout, the agent
+command environment, VS Code, migration from the old symlink setup, and testing.

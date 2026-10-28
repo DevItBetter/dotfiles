@@ -1,4 +1,4 @@
-name: Dotfiles contracts
+name: Dotfiles
 
 on:
   push:
@@ -7,9 +7,13 @@ on:
 permissions:
   contents: read
 
+env:
+  CHEZMOI_VERSION: v2.73.3
+
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -18,11 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install validation tools
-        shell: bash
+      - name: Install zsh, ShellCheck, and chezmoi
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
             sudo apt-get update
@@ -30,26 +30,61 @@ jobs:
           else
             brew install shellcheck
           fi
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" -t "$CHEZMOI_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Secure zsh completion directories
         # Hosted runners leave some system completion directories group- or
-        # world-writable; the shell startup test expects a clean compaudit.
+        # world-writable, which makes compinit warn on every shell start.
         run: |
           zsh -fc 'autoload -Uz compaudit
             for d in ${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}; do sudo chmod g-w,o-w "$d"; done'
-      - uses: jdx/mise-action@v2
-        with:
-          install: false
-      - name: Install pinned chezmoi
-        run: mise use --global chezmoi@2.73.3
-      - name: Run regression tests
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
+      - name: Run tests
+        run: node --test tests/*.test.mjs
+      - name: Check shell and zsh syntax
         run: |
-          mise exec chezmoi@2.73.3 -- python3 -m unittest discover -s script/tests -p 'test_*.py'
-          node --test script/tests/*.test.mjs
-      - name: Check shell scripts
-        run: |
-          shellcheck -x -S warning script/*.sh script/lib/*.sh tmux/bin/tmux-pane-bg
-          for file in zsh/zshenv zsh/zshrc zsh/config/*.zsh zsh/config/windows/*.zsh; do
+          shellcheck home/dot_local/bin/executable_tmux-pane-bg home/dot_local/share/agent-env/executable_* \
+            home/dot_local/share/agent-env/bin/executable_bash
+          for file in home/dot_zshenv home/dot_config/zsh/dot_zshrc home/dot_config/zsh/conf.d/*.zsh; do
             zsh -n "$file"
           done
+
+  # Bootstrap a fresh runner the way a new machine would be set up.
+  bootstrap:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" -t "$CHEZMOI_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: chezmoi init --apply
+        run: |
+          chezmoi init --apply --no-tty --source "$GITHUB_WORKSPACE" \
+            --promptString "Git user.name=CI,Git user.email=ci@example.com" \
+            --promptChoice "mise tool profile=core" --promptBool "Install desktop apps=false"
+      - name: ShellCheck the rendered scripts
+        run: |
+          for script in home/.chezmoiscripts/*; do
+            chezmoi execute-template <"$script" >"$RUNNER_TEMP/script.sh"
+            shellcheck -s bash "$RUNNER_TEMP/script.sh" || { echo "in $script"; exit 1; }
+          done
+      - name: Check the installed environment
+        shell: zsh -i {0}
+        run: |
+          set -e
+          [[ $ZDOTDIR == $HOME/.config/zsh ]]
+          for tool in starship node python uv diff-so-fancy fzf tmux rg; do whence -p $tool; done
+          [[ $(git config user.name) == CI ]]
+          whence -w compdef _zsh_autosuggest_start
+          chezmoi verify --exclude scripts
+      - name: zsh starts without output on stderr
+        run: |
+          errors="$(zsh -i -c exit 2>&1 >/dev/null)"
+          [[ -z $errors ]] || { printf '%s\n' "$errors"; exit 1; }

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Install mise, which installs the developer tools in ~/.config/mise/config.toml.
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+command -v mise >/dev/null 2>&1 && exit 0
+{{ if eq .chezmoi.os "darwin" -}}
+brew install mise
+{{- else -}}
+curl -fsSL https://mise.run | MISE_INSTALL_PATH="$HOME/.local/bin/mise" sh
+{{- end }}

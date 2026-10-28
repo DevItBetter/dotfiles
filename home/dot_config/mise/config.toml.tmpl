@@ -1,0 +1,9 @@
+# Managed by chezmoi (profile: {{ .profile }}). Edit home/.chezmoidata/mise.yaml
+# in the dotfiles repository. Put machine-only tools in config.local.toml.
+[tools]
+{{- range includeTemplate "mise-tools" . | splitList "\n" }}
+{{ index $.mise.tools . }}
+{{- end }}
+
+[settings]
+minimum_release_age_excludes = {{ .mise.minimum_release_age_excludes | toJson }}

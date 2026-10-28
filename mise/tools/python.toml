@@ -1,6 +1,0 @@
-[tools]
-python = "latest"
-
-[_]
-label = "Python"
-groups = ["core"]

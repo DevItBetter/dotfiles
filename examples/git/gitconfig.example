@@ -1,0 +1,9 @@
+# Example ~/.gitconfig additions for machines that need extra identities.
+#
+# chezmoi manages the shared ~/.config/git/config and only creates
+# ~/.gitconfig once, so this file is yours to edit on each machine.
+
+# Use the work identity for repositories under ~/dev/work.
+#
+# [includeIf "gitdir:~/dev/work/**"]
+#     path = ~/.gitconfig.work

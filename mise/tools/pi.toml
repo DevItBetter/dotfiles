@@ -1,7 +1,0 @@
-[tools]
-"npm:@earendil-works/pi-coding-agent" = "latest"
-
-[_]
-label = "Pi"
-groups = ["coding-agents"]
-requires = ["node"]

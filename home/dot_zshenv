@@ -1,0 +1,9 @@
+# Read by every zsh process. Keep it quiet and fast; interactive
+# configuration lives in $ZDOTDIR/.zshrc.
+export ZDOTDIR="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
+
+typeset -U path PATH
+path=("$HOME/.local/bin"
+      "${MISE_SHIMS_DIR:-${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims}"
+      $path)
+export PATH

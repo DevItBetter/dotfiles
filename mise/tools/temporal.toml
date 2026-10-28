@@ -1,6 +1,0 @@
-[tools]
-"aqua:temporalio/cli" = "latest"
-
-[_]
-label = "Temporal CLI"
-groups = ["workflow"]

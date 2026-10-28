@@ -1,0 +1,55 @@
+# Tools for ~/.config/mise/config.toml. A profile selects groups and single
+# tools; `chezmoi init` asks for the profile once per machine. Machine-only
+# additions belong in ~/.config/mise/config.local.toml, which mise also reads.
+mise:
+  profiles:
+    core:
+      groups: [core]
+    terumo:
+      groups: [core, development, markitdown]
+      tools: [opencode, pi, copilot, herdr]
+    gbl:
+      groups: [core, development, coding-agents, jmunch, workflow]
+
+  groups:
+    core: [node, python, uv, starship, diff-so-fancy, chezmoi]
+    development: [bun, pnpm]
+    coding-agents: [opencode, pi, copilot, claude-code, codex, gemini-cli]
+    jmunch: [jcodemunch, jdatamunch, jdocmunch]
+    markitdown: [markitdown, markitdown-mcp]
+    workflow: [herdr, temporal]
+    personal: [yt-dlp]
+
+  # Each value is the TOML line written under [tools].
+  tools:
+    node: node = "lts"
+    python: python = "latest"
+    uv: uv = "latest"
+    starship: '"aqua:starship/starship" = "latest"'
+    diff-so-fancy: '"npm:diff-so-fancy" = "1.4.12"'
+    chezmoi: chezmoi = "latest"
+    bun: bun = "1"
+    pnpm: pnpm = "latest"
+    opencode: opencode = "latest"
+    pi: '"npm:@earendil-works/pi-coding-agent" = "latest"'
+    copilot: '"npm:@github/copilot" = "latest"'
+    claude-code: >-
+      "npm:@anthropic-ai/claude-code" = { version = "latest", postinstall = 'd="$MISE_TOOL_INSTALL_PATH/node_modules/@anthropic-ai/claude-code"; [ -d "$d" ] || d="$MISE_TOOL_INSTALL_PATH/lib/node_modules/@anthropic-ai/claude-code"; node "$d/install.cjs"' }
+    codex: '"npm:@openai/codex" = "latest"'
+    gemini-cli: '"npm:@google/gemini-cli" = "latest"'
+    jcodemunch: '"pipx:jcodemunch-mcp" = "latest"'
+    jdatamunch: '"pipx:jdatamunch-mcp" = "latest"'
+    jdocmunch: '"pipx:jdocmunch-mcp" = "latest"'
+    # ONNX Runtime dependencies do not yet provide Python 3.15 wheels.
+    markitdown: '"pipx:markitdown" = { version = "latest", uvx_args = "--python 3.14" }'
+    markitdown-mcp: '"pipx:markitdown-mcp" = { version = "0.0.1a4", uvx_args = "--python 3.14" }'
+    herdr: '"aqua:herdrdev/herdr" = "latest"'
+    temporal: '"aqua:temporalio/cli" = "latest"'
+    yt-dlp: yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
+
+  # Agents update often; do not hold them back by mise's release-age guard.
+  minimum_release_age_excludes:
+    - npm:@openai/codex
+    - npm:@anthropic-ai/claude-code
+    - npm:@earendil-works/pi-coding-agent
+    - npm:@github/copilot

@@ -1,3 +1,0 @@
-export DOTFILES_DIR={{ .root | replace "'" "'\\''" | printf "'%s'" }}
-export ZDOTDIR={{ .zsh | replace "'" "'\\''" | printf "'%s'" }}
-source "$DOTFILES_DIR/zsh/zshenv"

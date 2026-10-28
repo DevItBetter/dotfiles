@@ -1,0 +1,7 @@
+import { commandEnvironment } from {{ joinPath .chezmoi.homeDir ".local/share/agent-env/command-environment.mjs" | toJson }};
+
+// Pi already uses noninteractive Bash. Normalize the environment inherited by
+// its tools, extension subprocesses, and ! / !! commands without replacing them.
+export default function commandEnvironmentExtension() {
+  Object.assign(process.env, commandEnvironment(process.env));
+}

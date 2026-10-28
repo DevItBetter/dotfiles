@@ -1,7 +1,0 @@
-[tools]
-pnpm = "latest"
-
-[_]
-label = "pnpm"
-groups = ["development"]
-requires = ["node"]
