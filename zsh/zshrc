@@ -24,6 +24,10 @@ fi
 if [[ -r "${ZDOTDIR:-$HOME}/.antidote/antidote.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.antidote/antidote.zsh"
 fi
+# Plugins call compdef while loading, but compinit must run after they extend
+# fpath. Queue those calls and replay them in completions.zsh.
+typeset -ga _dotfiles_compdefs
+compdef() { _dotfiles_compdefs+=("${(j: :)${(q)@}}") }
 if [[ -r "${ZDOTDIR:-$HOME}/.zsh_plugins.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zsh_plugins.zsh"
 fi

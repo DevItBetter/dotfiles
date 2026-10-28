@@ -142,16 +142,19 @@ class DeploymentTests(unittest.TestCase):
         self.env.update(XDG_CONFIG_HOME=str(config), ZDOTDIR=str(zsh),
                         MISE_DATA_DIR=str(self.directory / "mise data"))
         self.run_cli(root=root)
+        # Plugins register completions before compinit; they must be replayed afterwards.
+        (zsh / ".zsh_plugins.zsh").write_text("compdef _git 'fake git'\n")
         env = dict(self.env)
         env.pop("ZDOTDIR")  # ~/.zshenv must select the custom startup directory.
         result = subprocess.run([shutil.which("zsh"), "-d", "-ic",
-                                 'print -rl -- "$DOTFILES_DIR" "$EDITOR" "$aliases[gs]" "$path[2]"'],
+                                 'print -rl -- "$DOTFILES_DIR" "$EDITOR" "$aliases[gs]" "$path[2]" '
+                                 '"$_comps[fake git]"'],
                                 env=env, cwd=self.directory, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, "")
         self.assertEqual(result.stdout.splitlines(),
                          [str(root), "local-editor", "local-status",
-                          str(self.directory / "mise data/shims")])
+                          str(self.directory / "mise data/shims"), "_git"])
 
     def test_shared_changes_update_owned_files_but_deselection_does_not_remove_them(self):
         root = self.relocated()

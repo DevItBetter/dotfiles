@@ -1,4 +1,9 @@
+(( $+functions[compdef] )) && unfunction compdef
 autoload -U compinit && compinit
+for _dotfiles_compdef in "${_dotfiles_compdefs[@]}"; do
+  eval "compdef $_dotfiles_compdef"
+done
+unset _dotfiles_compdef _dotfiles_compdefs
 zmodload -i zsh/complist
 
 # man zshcontrib
