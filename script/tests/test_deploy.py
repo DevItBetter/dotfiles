@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -155,6 +156,24 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(result.stdout.splitlines(),
                          [str(root), "local-editor", "local-status",
                           str(self.directory / "mise data/shims"), "_git"])
+
+    @unittest.skipUnless(shutil.which("zsh"), "zsh is not installed")
+    def test_insecure_completion_directory_warns_without_aborting_compinit(self):
+        self.run_cli()
+        plugin = self.directory / "insecure plugin"
+        plugin.mkdir()
+        plugin.chmod(0o777)
+        (plugin / "_insecurefake").write_text("#compdef insecurefake\n")
+        (self.home / ".zsh_plugins.zsh").write_text(
+            f"fpath+=({shlex.quote(str(plugin))})\ncompdef _git 'fake git'\n")
+        result = subprocess.run([shutil.which("zsh"), "-d", "-ic",
+                                 'print -rl -- "$_comps[fake git]" "${_comps[insecurefake]-none}"'],
+                                env=self.env, cwd=self.directory, text=True, capture_output=True,
+                                stdin=subprocess.DEVNULL)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["_git", "none"])
+        self.assertIn("insecure completion directories", result.stderr)
+        self.assertIn(str(plugin), result.stderr)
 
     def test_shared_changes_update_owned_files_but_deselection_does_not_remove_them(self):
         root = self.relocated()

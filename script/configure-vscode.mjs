@@ -197,7 +197,7 @@ export function main(args = process.argv.slice(2)) {
   console.log(`Bundled runtime: ${plan.runtime}`);
   console.log(JSON.stringify(plan.updates, null, 2));
   if (values["dry-run"]) return;
-  const check = spawnSync("/bin/bash", [join(root, "script/agent-command.sh"), "/bin/true"],
+  const check = spawnSync("/bin/bash", [join(root, "script/agent-command.sh"), "/bin/sh", "-c", ":"],
     { cwd: home, encoding: "utf8" });
   if (check.status !== 0) throw new Error(check.stderr.trim() || "Cannot start the shared agent launcher.");
   const previous = existsSync(plan.launcher) ? readFileSync(plan.launcher, "utf8") : undefined;

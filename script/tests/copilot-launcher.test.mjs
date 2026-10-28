@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { test } from "node:test";
@@ -13,7 +13,8 @@ const zsh = spawnSync("/bin/sh", ["-c", "command -v zsh"], { encoding: "utf8" })
 const actualMise = spawnSync("/bin/sh", ["-c", "command -v mise"], { encoding: "utf8" }).stdout.trim();
 
 function fixture(t, wrapper = false) {
-  const directory = mkdtempSync(join(tmpdir(), "copilot-launcher-"));
+  // macOS reports /var temp paths as /private/var after cd.
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), "copilot-launcher-")));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const home = join(directory, "home with spaces");
   const bin = join(directory, "bin");

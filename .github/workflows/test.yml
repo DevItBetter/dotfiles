@@ -30,6 +30,12 @@ jobs:
           else
             brew install shellcheck
           fi
+      - name: Secure zsh completion directories
+        # Hosted runners leave some system completion directories group- or
+        # world-writable; the shell startup test expects a clean compaudit.
+        run: |
+          zsh -fc 'autoload -Uz compaudit
+            for d in ${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}; do sudo chmod g-w,o-w "$d"; done'
       - uses: jdx/mise-action@v2
         with:
           install: false

@@ -1,5 +1,15 @@
 (( $+functions[compdef] )) && unfunction compdef
-autoload -U compinit && compinit
+autoload -Uz compinit compaudit
+# Plain compinit prompts about insecure directories and aborts without a terminal,
+# which leaves compdef undefined. Skip those directories and say how to fix them.
+if _dotfiles_insecure=(${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}); (( ${#_dotfiles_insecure} )); then
+  print -u2 -r -- "dotfiles: ignoring insecure completion directories (fix: compaudit | xargs chmod g-w,o-w):"
+  print -u2 -rl -- "  ${^_dotfiles_insecure[@]}"
+  compinit -i
+else
+  compinit
+fi
+unset _dotfiles_insecure
 for _dotfiles_compdef in "${_dotfiles_compdefs[@]}"; do
   eval "compdef $_dotfiles_compdef"
 done
