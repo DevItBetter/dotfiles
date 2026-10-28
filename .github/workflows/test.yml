@@ -69,6 +69,10 @@ jobs:
           chezmoi init --apply --no-tty --source "$GITHUB_WORKSPACE" \
             --promptString "Git user.name=CI,Git user.email=ci@example.com" \
             --promptChoice "mise tool profile=core" --promptBool "Install desktop apps=false"
+      - name: Secure zsh completion directories
+        run: |
+          zsh -fc 'autoload -Uz compaudit
+            for d in ${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}; do sudo chmod g-w,o-w "$d"; done'
       - name: ShellCheck the rendered scripts
         run: |
           for script in home/.chezmoiscripts/*; do

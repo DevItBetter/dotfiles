@@ -41,7 +41,8 @@ for package in "${packages[@]}"; do
 done
 
 if [[ $pm == brew ]]; then
-  for cask in "${casks[@]}"; do
+  # macOS ships Bash 3.2, where "${empty[@]}" fails under set -u.
+  for cask in ${casks[@]+"${casks[@]}"}; do
     brew list --cask "$cask" >/dev/null 2>&1 || brew install --cask "$cask"
   done
   (( ${#missing[@]} == 0 )) || brew install "${missing[@]}"
@@ -49,18 +50,17 @@ if [[ $pm == brew ]]; then
 fi
 (( ${#missing[@]} )) || exit 0
 
-sudo=()
-if (( EUID != 0 )); then
-  if ! command -v sudo >/dev/null 2>&1; then
-    printf 'No root or sudo. Install these yourself: %s\n' "${missing[*]}" >&2
-    exit 0
-  fi
-  sudo=(sudo)
+if (( EUID != 0 )) && ! command -v sudo >/dev/null 2>&1; then
+  printf 'No root or sudo. Install these yourself: %s\n' "${missing[*]}" >&2
+  exit 0
 fi
+as_root() {
+  if (( EUID == 0 )); then "$@"; else sudo "$@"; fi
+}
 printf 'Installing with %s: %s\n' "$pm" "${missing[*]}"
 case $pm in
-  apt) "${sudo[@]}" apt-get update && "${sudo[@]}" apt-get install -y "${missing[@]}" ;;
-  dnf) "${sudo[@]}" dnf install -y "${missing[@]}" ;;
-  pacman) "${sudo[@]}" pacman -S --needed --noconfirm "${missing[@]}" ;;
-  zypper) "${sudo[@]}" zypper --non-interactive install "${missing[@]}" ;;
+  apt) as_root apt-get update && as_root apt-get install -y "${missing[@]}" ;;
+  dnf) as_root dnf install -y "${missing[@]}" ;;
+  pacman) as_root pacman -S --needed --noconfirm "${missing[@]}" ;;
+  zypper) as_root zypper --non-interactive install "${missing[@]}" ;;
 esac
