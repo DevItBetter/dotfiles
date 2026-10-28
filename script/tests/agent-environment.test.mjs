@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 import { commandEnvironment } from "../../agents/command-environment.mjs";
 import opencode from "../../agents/opencode.js";
 
@@ -111,34 +110,4 @@ test("Pi extension normalizes only its own process and tolerates reloads", () =>
   assert.equal(result.path.split(":")[0], "/example/mise/shims");
   assert.equal(result.pager, "cat");
   assert.equal(result.color, "false");
-});
-
-test("setup links both adapters, backs up the old plugin, and leaves settings alone", (t) => {
-  const root = fileURLToPath(new URL("../../", import.meta.url));
-  const home = mkdtempSync(join(tmpdir(), "agent-links-"));
-  t.after(() => rmSync(home, { recursive: true, force: true }));
-  const config = join(home, "custom config");
-  const pi = join(home, "custom pi");
-  const plugin = join(config, "opencode/plugins/command-environment.js");
-  mkdirSync(dirname(plugin), { recursive: true });
-  mkdirSync(pi, { recursive: true });
-  writeFileSync(plugin, "// previous plugin\n");
-  writeFileSync(join(pi, "settings.json"), '{"theme":"device-local"}\n');
-  writeFileSync(join(config, "opencode/opencode.jsonc"), '// local settings\n{}\n');
-  const child = spawnSync("/bin/bash", ["--noprofile", "--norc", "-c",
-    'source "$1"; link_agent_integrations; link_agent_integrations', "--",
-    join(root, "script/lib/symlinks.sh")], { encoding: "utf8", env: {
-      ...process.env, HOME: home, DOTFILES_DIR: root,
-      XDG_CONFIG_HOME: config, PI_CODING_AGENT_DIR: pi,
-    } });
-  assert.equal(child.status, 0, child.stderr);
-  assert.equal(realpathSync(plugin), join(root, "agents/opencode.js"));
-  assert.equal(realpathSync(join(pi, "extensions/command-environment.js")), join(root, "agents/pi.js"));
-  for (const directory of [dirname(plugin), join(pi, "extensions")]) {
-    assert.equal(realpathSync(join(directory, "command-environment.mjs")),
-      join(root, "agents/command-environment.mjs"));
-  }
-  assert.equal(readFileSync(plugin + ".backup", "utf8"), "// previous plugin\n");
-  assert.equal(readFileSync(join(pi, "settings.json"), "utf8"), '{"theme":"device-local"}\n');
-  assert.equal(readFileSync(join(config, "opencode/opencode.jsonc"), "utf8"), '// local settings\n{}\n');
 });

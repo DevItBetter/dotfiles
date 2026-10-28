@@ -15,8 +15,8 @@ BASE_PACKAGES=(
   python3
   fzf
   tmux
-  alacritty
-  shellcheck
+  ripgrep
+  less
   perl-time-hires
 )
 
@@ -25,7 +25,9 @@ DISTRO_LIKE_CACHE=""
 
 # Detect the system's package manager
 detect_package_manager() {
-  if command -v apt-get &>/dev/null; then
+  if [ "$(uname -s)" = Darwin ] && command -v brew &>/dev/null; then
+    printf '%s\n' "brew"
+  elif command -v apt-get &>/dev/null; then
     printf '%s\n' "apt"
   elif command -v dnf &>/dev/null; then
     printf '%s\n' "dnf"
@@ -94,6 +96,7 @@ lookup_pkg_override() {
     yum:perl-time-hires) echo "perl-Time-HiRes" ;;
     pacman:perl-time-hires) echo "perl" ;;
     brew:perl-time-hires) echo "perl" ;;
+    brew:python3) echo "python" ;;
     *) return 1 ;;
   esac
 }
@@ -129,9 +132,23 @@ map_pkg() {
 }
 
 # Install baseline packages using the detected package manager
+as_root() {
+  if [ "$(id -u)" -eq 0 ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
 install_baseline_packages() {
-  local pm pkgs=()
+  local pm p pkgs=()
   pm="$(detect_package_manager)"
+  if [ "$(id -u)" -ne 0 ] && [ "$pm" != brew ]; then
+    if ! command -v sudo >/dev/null 2>&1; then
+      error "System provisioning needs root or sudo. Configuration deployment does not."
+      return 1
+    fi
+  fi
 
   for p in "${BASE_PACKAGES[@]}"; do
     pkgs+=( "$(map_pkg "$pm" "$p")" )
@@ -141,19 +158,26 @@ install_baseline_packages() {
 
   case "$pm" in
     apt)
-      sudo apt-get update
-      sudo apt-get install -y "${pkgs[@]}"
+      as_root apt-get update
+      as_root apt-get install -y "${pkgs[@]}"
       ;;
     dnf)
-      sudo dnf install -y "${pkgs[@]}"
+      as_root dnf install -y "${pkgs[@]}"
       ;;
     yum)
-      sudo yum install -y "${pkgs[@]}"
+      as_root yum install -y "${pkgs[@]}"
       ;;
     pacman)
-      sudo pacman -Sy --noconfirm "${pkgs[@]}"
+      as_root pacman -S --needed --noconfirm "${pkgs[@]}"
       ;;
     brew)
+      if [[ " ${BASE_PACKAGES[*]} " == *" alacritty "* ]]; then
+        brew install --cask alacritty
+        pkgs=()
+        for p in "${BASE_PACKAGES[@]}"; do
+          [ "$p" = alacritty ] || pkgs+=( "$(map_pkg "$pm" "$p")" )
+        done
+      fi
       brew install "${pkgs[@]}"
       ;;
     *)

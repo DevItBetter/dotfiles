@@ -12,7 +12,6 @@ setopt extended_glob # treat #, ~, and ^ as part of patterns for filename genera
 # ===== History
 setopt append_history # Allow multiple terminal sessions to all append to one zsh command history
 setopt extended_history # save timestamp of command and duration
-setopt inc_append_history # Add comamnds as they are typed, don't wait until shell exit
 setopt hist_expire_dups_first # when trimming history, lose oldest duplicates first
 setopt hist_ignore_dups # Do not write events to history that are duplicates of previous events
 setopt hist_ignore_space # remove command line from history list when first character on the line is a space
@@ -31,7 +30,6 @@ unsetopt menu_complete # do not autoselect the first completion entry
 
 # ===== Correction
 setopt correct # spelling correction for commands
-setopt correctall # spelling correction for arguments
 
 # ===== Prompt
 setopt prompt_subst # Enable parameter expansion, command substitution, and arithmetic expansion in the prompt
@@ -39,4 +37,3 @@ setopt transient_rprompt # only show the rprompt on the current prompt
 
 # ===== Scripts and Functions
 setopt multios # perform implicit tees or cats when multiple redirections are attempted
-

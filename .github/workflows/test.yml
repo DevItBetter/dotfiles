@@ -1,0 +1,49 @@
+name: Dotfiles contracts
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install validation tools
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            sudo apt-get update
+            sudo apt-get install -y zsh shellcheck
+          else
+            brew install shellcheck
+          fi
+      - uses: jdx/mise-action@v2
+        with:
+          install: false
+      - name: Install pinned chezmoi
+        run: mise use --global chezmoi@2.73.3
+      - name: Run regression tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          mise exec chezmoi@2.73.3 -- python3 -m unittest discover -s script/tests -p 'test_*.py'
+          node --test script/tests/*.test.mjs
+      - name: Check shell scripts
+        run: |
+          shellcheck -x -S warning script/*.sh script/lib/*.sh tmux/bin/tmux-pane-bg
+          for file in zsh/zshenv zsh/zshrc zsh/config/*.zsh zsh/config/windows/*.zsh; do
+            zsh -n "$file"
+          done

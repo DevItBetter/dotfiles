@@ -1,0 +1,6 @@
+[tools]
+chezmoi = "2.73.3"
+
+[_]
+label = "chezmoi dotfile deployment"
+groups = ["core"]

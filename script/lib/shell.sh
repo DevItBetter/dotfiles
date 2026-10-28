@@ -23,15 +23,25 @@ set_default_shell_zsh() {
 
   # Set zsh as default shell
   local current_shell zsh_path
-  current_shell=$(basename "$SHELL")
+  current_shell="${SHELL:-}"
+  if command -v getent >/dev/null 2>&1; then
+    current_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+  elif command -v dscl >/dev/null 2>&1; then
+    current_shell="$(dscl . -read "/Users/$(id -un)" UserShell | awk '{print $2}')"
+  fi
+  current_shell="${current_shell##*/}"
   if [ "$current_shell" != "zsh" ]; then
     info "Setting zsh as default shell..."
     zsh_path=$(command -v zsh)
 
+    if ! command -v chsh >/dev/null 2>&1; then
+      error "chsh is unavailable. Configure the login shell through your account administrator."
+      return 1
+    fi
     # Add to /etc/shells if not present
-    if ! grep -q "$zsh_path" /etc/shells 2>/dev/null; then
+    if ! grep -Fxq "$zsh_path" /etc/shells 2>/dev/null; then
       info "Adding $zsh_path to /etc/shells..."
-      printf '%s\n' "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+      printf '%s\n' "$zsh_path" | as_root tee -a /etc/shells >/dev/null
     fi
 
     chsh -s "$zsh_path"
@@ -49,30 +59,9 @@ install_antidote() {
   if [ -r "$antidote_dir/antidote.zsh" ]; then
     success "Antidote already installed"
   else
+    mkdir -p "$(dirname "$antidote_dir")"
     git clone --depth=1 https://github.com/mattmc3/antidote.git "$antidote_dir"
     success "Antidote installed"
-  fi
-}
-
-# Install the tools declared in the global mise configuration.
-install_mise_tools() {
-  info "Installing mise-managed tools..."
-  local mise_bin
-  mise_bin="$(command -v mise || printf '%s' "$HOME/.local/bin/mise")"
-  "$mise_bin" -C "$HOME" install || return "$?"
-  success "mise tools installed"
-}
-
-# Install mise (runtime version manager)
-install_mise() {
-  info "Setting up mise..."
-
-  if command -v mise &>/dev/null; then
-    success "mise already installed: $(mise --version | head -1)"
-  else
-    info "Installing mise..."
-    curl https://mise.run | sh
-    success "mise installed"
   fi
 }
 

@@ -1,47 +1,21 @@
 [[ -o interactive ]] || return 0
 
+# Also support sourcing this file directly from a relocated checkout.
+export DOTFILES_DIR="${DOTFILES_DIR:-${${(%):-%x}:A:h:h}}"
+
 if [[ -n ${TILIX_ID:-}${VTE_VERSION:-} && -r /etc/profile.d/vte.sh ]]; then
     source /etc/profile.d/vte.sh
 fi
 
 # Environment Settings
-source "$HOME/dotfiles/zsh/config/exports.zsh"
+source "$DOTFILES_DIR/zsh/config/exports.zsh"
 
-[[ -e "$HOME/dotfiles/zsh/config/work.zsh" ]] && source "$HOME/dotfiles/zsh/config/work.zsh"
-[[ -e "$HOME/dotfiles/zsh/config/local.zsh" ]] && source "$HOME/dotfiles/zsh/config/local.zsh"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if [[ -x /usr/bin/conda ]] && __conda_setup="$(/usr/bin/conda shell.zsh hook 2>/dev/null)"; then
-    eval "$__conda_setup"
-else
-    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
-        . "/usr/etc/profile.d/conda.sh"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+_dotfiles_local="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
+[[ -r "$_dotfiles_local/env.zsh" ]] && source "$_dotfiles_local/env.zsh"
 
 # mise shims are added in ~/.zshenv so all zsh invocations can find them.
 if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
-fi
-
-source "$HOME/dotfiles/zsh/config/history.zsh"
-source "$HOME/dotfiles/zsh/config/setopt.zsh"
-source "$HOME/dotfiles/zsh/config/completions.zsh"
-source "$HOME/dotfiles/zsh/config/bindkeys.zsh"
-source "$HOME/dotfiles/zsh/config/fzf.zsh"
-source "$HOME/dotfiles/zsh/config/aliases.zsh"
-
-# Useful functions
-source "$HOME/dotfiles/zsh/config/functions.zsh"
-
-# WSL setup
-if is_wsl; then
-  _cfg="$HOME/dotfiles/zsh/config/windows/wsl2-ssh-agent.zsh"
-  [[ -r "$_cfg" ]] && source "$_cfg"
-  unset _cfg
 fi
 
 # -------------------------------------------------------------------
@@ -54,9 +28,27 @@ if [[ -r "${ZDOTDIR:-$HOME}/.zsh_plugins.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zsh_plugins.zsh"
 fi
 
+source "$DOTFILES_DIR/zsh/config/history.zsh"
+source "$DOTFILES_DIR/zsh/config/setopt.zsh"
+source "$DOTFILES_DIR/zsh/config/completions.zsh"
+source "$DOTFILES_DIR/zsh/config/bindkeys.zsh"
+source "$DOTFILES_DIR/zsh/config/fzf.zsh"
+source "$DOTFILES_DIR/zsh/config/aliases.zsh"
+source "$DOTFILES_DIR/zsh/config/functions.zsh"
+
+if is_wsl && [[ -x "$HOME/.local/bin/wsl2-ssh-agent" ]]; then
+  source "$DOTFILES_DIR/zsh/config/windows/wsl2-ssh-agent.zsh"
+fi
+
 # -------------------------------------------------------------------
 # Starship Prompt
 # -------------------------------------------------------------------
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
+
+# Preserve old checkout-local overrides during migration; prefer the XDG file.
+[[ -r "$DOTFILES_DIR/zsh/config/work.zsh" ]] && source "$DOTFILES_DIR/zsh/config/work.zsh"
+[[ -r "$DOTFILES_DIR/zsh/config/local.zsh" ]] && source "$DOTFILES_DIR/zsh/config/local.zsh"
+[[ -r "$_dotfiles_local/local.zsh" ]] && source "$_dotfiles_local/local.zsh"
+unset _dotfiles_local

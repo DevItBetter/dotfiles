@@ -1,18 +1,10 @@
 ---
-description: Always prepend nocorrect to shell commands (user preference)
+description: Keep automated shell commands independent of interactive configuration
 alwaysApply: true
 ---
 
 # Shell Commands
 
-Always prepend `nocorrect` to shell commands before execution.
-
-## Examples
-
-```bash
-# ❌ BAD
-git status
-
-# ✅ GOOD
-nocorrect git status
-```
+Do not source interactive shell configuration to run automated commands.
+Use explicit executables rather than relying on personal aliases.
+`nocorrect` is Zsh syntax; do not prepend it to Bash commands.

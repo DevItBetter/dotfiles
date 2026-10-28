@@ -1,0 +1,12 @@
+{{ if not .capabilities.prompt }}
+starship.toml
+{{ end }}
+{{ if not .capabilities.terminal }}
+alacritty
+{{ end }}
+{{ if not .capabilities.agents }}
+opencode
+{{ end }}
+{{ if not .capabilities.git }}
+git
+{{ end }}

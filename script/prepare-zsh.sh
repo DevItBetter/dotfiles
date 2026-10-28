@@ -8,7 +8,7 @@ antidote="$zsh_dir/.antidote/antidote.zsh"
 cache="$zsh_dir/.zsh_plugins.zsh"
 
 if [[ ! -r "$antidote" ]]; then
-  printf 'Antidote is missing. Run bash %s/script/setup.sh first.\n' "$DOTFILES_DIR" >&2
+  printf 'Antidote is missing. Run bash %s/script/provision.sh --apply --plugins first.\n' "$DOTFILES_DIR" >&2
   exit 1
 fi
 

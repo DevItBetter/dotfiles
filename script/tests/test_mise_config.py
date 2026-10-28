@@ -217,11 +217,32 @@ class MiseConfigTests(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertFalse(self.directory.exists())
 
-    def test_setup_dry_run_does_not_install_or_write(self):
-        result = self.run_cli("--profile", "gbl", "--dry-run", script="setup.sh")
+    def test_selector_dry_run_does_not_install_or_write(self):
+        result = self.run_cli("--profile", "gbl", "--dry-run")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("Installing", result.stdout)
         self.assertFalse(self.directory.exists())
+
+    def test_retired_selections_allow_reset_and_remove_only_owned_fragments(self):
+        save_selection(self.directory, self.catalog, self.profile("core"), {})
+        state_path = self.directory / STATE
+        state = json.loads(state_path.read_text())
+        retired = self.directory / "conf.d/10-dotfiles-retired.toml"
+        source = str(self.home / "removed-tool.toml")
+        retired.write_text(fragment_text(source))
+        state["tools"] = ["retired"]
+        state["groups"] = ["old-group"]
+        state["exclude"] = ["old-tool"]
+        state["sources"][retired.name] = source
+        state_path.write_text(json.dumps(state))
+        result = self.run_cli("--profile", "core", "--dry-run")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("retired", result.stderr)
+        self.assertTrue(retired.exists())
+        result = self.run_cli("--profile", "core")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(retired.exists())
+        self.assertEqual(load_state(self.directory, self.catalog)[0].profiles, {"core"})
 
     def test_global_config_override_is_rejected(self):
         result = self.run_cli("--profile", "gbl", MISE_GLOBAL_CONFIG_FILE=str(self.home / "override.toml"))

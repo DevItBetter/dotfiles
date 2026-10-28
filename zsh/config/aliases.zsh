@@ -34,7 +34,7 @@ alias .....='cd ../../../..'
 # -------------------------------------------------------------------
 # finding stuff
 # -------------------------------------------------------------------
-alias grep='grep --color=auto --exclude-dir=".svn,.git"'
+alias grep='grep --color=auto'
 alias rg='rg --color=auto'
 
 alias sgrep='rg -RnH -C 5' #recursive search with context
@@ -51,7 +51,11 @@ alias fna='tar -ztvf xxx.tar.gz |rg yyyy' #find in archive
 # -------------------------------------------------------------------
 # show me things
 # -------------------------------------------------------------------
-alias ls='ls --color=auto'
+if [[ $OSTYPE == darwin* ]]; then
+  alias ls='ls -G'
+else
+  alias ls='ls --color=auto'
+fi
 alias lsd='ls -aFhld' # only directories
 alias lsdh='ls -aFhl .*' #list hidden directories
 alias l='ls -alh'
@@ -78,12 +82,13 @@ alias ga="git add"
 # -------------------------------------------------------------------
 # Coding agents
 # -------------------------------------------------------------------
-_dotfiles_copilot_alias='bash "$HOME/dotfiles/script/copilot.sh"'
+export DOTFILES_DIR="${DOTFILES_DIR:-${${(%):-%x}:A:h:h:h}}"
+_dotfiles_copilot_alias='bash "$DOTFILES_DIR/script/copilot.sh"'
 # Clear only our own alias when reloading after an uninstall.
 if [[ ${aliases[copilot]-} == "$_dotfiles_copilot_alias" ]]; then
   unalias copilot
 fi
-if [[ -r "$HOME/dotfiles/script/copilot.sh" ]] && (( $+commands[mise] )) &&
+if [[ -r "$DOTFILES_DIR/script/copilot.sh" ]] && (( $+commands[mise] )) &&
     _dotfiles_copilot_bin="$(MISE_OFFLINE=1 command mise which --tool npm:@github/copilot copilot 2>/dev/null)" &&
     [[ -x "$_dotfiles_copilot_bin" ]] &&
     _dotfiles_copilot_node="$(MISE_OFFLINE=1 command mise which --tool node@lts node 2>/dev/null)" &&
@@ -93,17 +98,10 @@ fi
 unset _dotfiles_copilot_alias _dotfiles_copilot_bin _dotfiles_copilot_node
 
 # -------------------------------------------------------------------
-# Python virtualenv
-# -------------------------------------------------------------------
-alias mkenv='mkvirtualenv'
-alias on="workon"
-alias off="deactivate"
-
-# -------------------------------------------------------------------
 # Oddball stuff
 # -------------------------------------------------------------------
 alias h='history'
 alias lsofip6='lsof -Pnl +M -i6'
 alias lsofip4='lsof -Pnl +M -i4'
 
-alias fav_commands=history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn
+alias fav_commands='favorite_commands'

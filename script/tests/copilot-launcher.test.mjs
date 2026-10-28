@@ -26,7 +26,6 @@ function fixture(t, wrapper = false) {
   for (const path of [home, bin, dirname(copilot), dirname(entry), join(data, "shims")]) {
     mkdirSync(path, { recursive: true });
   }
-  symlinkSync(root, join(home, "dotfiles"));
   if (wrapper) {
     writeFileSync(copilot, `#!/bin/sh
 # aube-bin-shim v2 target=${relative(dirname(copilot), entry)}
@@ -63,7 +62,7 @@ if (process.env.TEST_SIGNAL) process.kill(process.pid, process.env.TEST_SIGNAL);
 process.exit(Number(process.env.TEST_EXIT_CODE || 0));
 `, { mode: 0o755 });
   const env = {
-    ...process.env, HOME: home, MISE_DATA_DIR: data,
+    ...process.env, HOME: home, DOTFILES_DIR: root, MISE_DATA_DIR: data,
     MISE_CONFIG_DIR: join(directory, "config"), MISE_CACHE_DIR: join(directory, "cache"),
     MISE_STATE_DIR: join(directory, "state"), MISE_SYSTEM_CONFIG_DIR: join(directory, "etc"),
     PATH: [bin, join(data, "installs/node/old/bin"), join(data, "shims"), "/usr/bin", "/bin"].join(":"),
@@ -199,7 +198,7 @@ test("failed mise resolution never enables the alias even if stdout names an exe
 
 test("installed Copilot gets a working alias that tolerates reloads without recursion", (t) => {
   const f = fixture(t);
-  assert.equal(shell(f).stdout, 'bash "$HOME/dotfiles/script/copilot.sh"\n');
+  assert.equal(shell(f).stdout, 'bash "$DOTFILES_DIR/script/copilot.sh"\n');
   const result = shell(f, 'source "$1"\neval \'copilot --prompt "argument with spaces"\'');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, "");
@@ -224,7 +223,7 @@ test("an unrelated user alias is left alone when Copilot is unavailable", (t) =>
 
 test("a missing launcher does not create an alias", (t) => {
   const f = fixture(t);
-  unlinkSync(join(f.home, "dotfiles"));
+  f.env.DOTFILES_DIR = join(f.directory, "missing-checkout");
   assert.equal(shell(f).stdout, "unset\n");
 });
 

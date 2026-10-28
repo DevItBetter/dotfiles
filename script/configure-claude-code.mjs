@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { writeChanged } from "./configure-vscode.mjs";
+import { writeChanged } from "./config-files.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const quote = (value) => "'" + value.replaceAll("'", "'\\''") + "'";

@@ -2,19 +2,15 @@
 	name = Jeff Joltes
 	email = jeff.joltes@gmail.com
 
-[branch "master"]
-    remote = origin
-    merge = refs/heads/master
-    
 [color]
-    branch = always
-    diff = always
-    grep = always
-    interactive = always
+    branch = auto
+    diff = auto
+    grep = auto
+    interactive = auto
     pager = true
     showbranch = auto
     status = auto
-    ui = always
+    ui = auto
     
 [alias]
 	branches = branch -a
@@ -25,17 +21,13 @@
 	uncommit = reset --mixed HEAD~
 	amend = commit --amend
 	
-	push = push origin master
-	
     log2 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
     log3 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all
     
 [push]
-	default = matching
+	default = simple
 [pull]
 	ff = only
-[credential]
-	helper = store
 [include]
 	path = ~/.gitconfig.local
 [dotfiles]

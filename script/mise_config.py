@@ -119,11 +119,18 @@ class Selection:
     exclude: set = field(default_factory=set)
 
     @classmethod
-    def load(cls, data, catalog):
+    def load(cls, data, catalog, *, retired=False):
         selection = cls()
         for key, entries in [("profiles", catalog.profiles), ("groups", catalog.groups),
                              ("tools", catalog.tools), ("exclude", catalog.tools)]:
             names = data.get(key, [])
+            if retired:
+                if not isinstance(names, list) or any(not isinstance(name, str) or not ID.fullmatch(name) for name in names):
+                    raise ValueError(f"Invalid saved {key}")
+                missing = set(names) - set(entries)
+                if missing:
+                    print(f"Warning: ignoring retired {key}: {', '.join(sorted(missing))}", file=sys.stderr)
+                names = [name for name in names if name in entries]
             catalog.validate_names(names, entries, key)
             setattr(selection, key, set(names))
         if selection.exclude & catalog.core:
@@ -173,7 +180,7 @@ def load_state(directory, catalog):
         sources = data.get("sources") if data.get("version") == 2 else data.get("links")
         if data.get("version") not in {1, 2} or not isinstance(sources, dict):
             raise ValueError(f"Unsupported selection state: {path}")
-        return Selection.load(data, catalog), sources
+        return Selection.load(data, catalog, retired=True), sources
     selection = Selection()
     config = directory / "config.toml"
     if config.is_file():
