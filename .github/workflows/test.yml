@@ -22,6 +22,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
       - name: Install zsh, ShellCheck, and chezmoi
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then

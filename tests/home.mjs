@@ -13,7 +13,7 @@ export const chezmoi = process.env.CHEZMOI || "chezmoi";
 // Pass the test context `t` to delete the HOME when that test ends.
 // `setup(home)` runs before chezmoi, for files that should already exist.
 export function deployHome({ t, profile = "terumo", desktop = false, name = "Test User",
-  email = "test@example.com", env = {}, setup } = {}) {
+  email = "test@example.com", env = {}, setup, source = repo, exclude = "scripts,externals" } = {}) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), "dotfiles-home-")));
   const remove = () => rmSync(home, { recursive: true, force: true });
   if (t) t.after(remove); else process.on("exit", remove);
@@ -26,11 +26,11 @@ export function deployHome({ t, profile = "terumo", desktop = false, name = "Tes
     return result;
   };
   setup?.(home);
-  run("init", "--no-tty", "--source", repo,
+  run("init", "--no-tty", "--source", source,
     "--promptString", `Git user.name=${name},Git user.email=${email}`,
     "--promptChoice", `mise tool profile=${profile}`,
     "--promptBool", `Install desktop apps=${desktop}`);
-  run("apply", "--no-tty", "--exclude", "scripts,externals");
+  run("apply", "--no-tty", "--exclude", exclude);
   return { home, agentEnv: join(home, ".local/share/agent-env"), run };
 }
 

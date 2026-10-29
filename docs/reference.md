@@ -50,7 +50,7 @@ them embed a hash of the file they depend on for that reason.
 
 | Script | Does |
 | --- | --- |
-| `run_once_before_00-migrate-legacy-links` | Removes links from the pre-chezmoi setup (see [Migrating](#migrating-from-the-symlink-setup)) |
+| `run_once_before_00-migrate-legacy-links` | Backs up and migrates local shell settings and extra tools before removing legacy links and generated files (see [Migrating](#migrating-from-the-symlink-setup)) |
 | `run_onchange_before_10-install-packages` | Installs `packages.yaml` with brew, apt, dnf, pacman, or zypper |
 | `run_once_before_20-install-mise` | Installs mise to `~/.local/bin` (Homebrew on macOS) |
 | `run_onchange_after_30-mise-install` | `mise install` whenever the mise config changes |
@@ -104,7 +104,9 @@ initialization in `local.zsh`.
 `~/.config/git/config` holds the shared settings and the identity from
 `chezmoi init`. Git reads `~/.gitconfig` after it, so settings there win.
 chezmoi creates `~/.gitconfig` once with only comments and never touches it
-again. Credential helpers belong there too.
+again. Credential helpers belong there too. If the legacy `~/.gitconfig.local`
+exists, the shared config includes it to preserve that machine's overrides.
+Settings in `~/.gitconfig` still take precedence.
 
 For a second GitHub account on one machine:
 
@@ -222,21 +224,49 @@ chezmoi diff                       # review
 chezmoi apply
 ```
 
+Keep the current terminal open until the new shell works. Legacy cleanup needs
+Python 3.11 or newer, which the old tool selector also required. Fresh machines
+with no legacy files skip the cleanup without needing Python first.
+
 The first apply runs `run_once_before_00-migrate-legacy-links`, which:
 
+- Checks the old selection and generated fragments before removing anything.
+  Unknown tools, edited fragments and conflicting migration files stop cleanup
+  for manual review, leaving the originals intact.
+- Backs up the affected existing files under
+  `${XDG_STATE_HOME:-~/.local/state}/dotfiles/migration/legacy-*/configuration.tar.gz`.
+  The backup directory is private, and the script prints its location.
 - Removes links in `$HOME` that point into the old checkout layout, such as
-  `~/.zshrc -> ~/dotfiles/zsh/zshrc`. Links pointing anywhere else are kept.
-- Removes the generated `~/.config/mise/conf.d/10-dotfiles-*.toml` files,
-  `dotfiles-selection.json`, and `~/.zsh_plugins.zsh`. Your other `conf.d` files
-  are kept.
+  `~/.zshrc -> ~/dotfiles/zsh/zshrc`. Unrecognized symlink targets are kept.
+- Preserves tools outside the chosen profile from `dotfiles-selection.json`
+  or remaining generated fragment names in
+  `~/.config/mise/conf.d/90-migrated-dotfiles.toml`. The versions and tool options
+  come from the current catalog. Tools already in `config.local.toml` are left
+  there with their existing overrides. Neither installed tools nor unrelated
+  mise fragments are removed.
+- Moves a legacy, machine-local `mise/config.toml` into `config.local.toml`
+  when the latter is missing or empty, before deploying the managed config.
+  Two different existing local configs require a manual merge first.
+- Removes the old generated `10-dotfiles-*.toml` files, selection JSON, and
+  `~/.zsh_plugins.zsh` only after preservation succeeds.
 - Appends `zsh/config/work.zsh` and `zsh/config/local.zsh` from the old checkout,
   and `~/.config/dotfiles/{env,local}.zsh`, to `~/.config/zsh/local.zsh`. Each
-  file is copied once.
+  file is copied once, with private permissions. It checks `~/dotfiles` and the
+  source checkout even when the old shell link has already been removed.
 
-The old `~/.gitconfig.local` is no longer included. Move its contents into
-`~/.gitconfig`. VS Code settings that point at the old `agents/bash` path are
-updated in place. The old `~/.antidote` checkout can be deleted once the new
-shell works.
+Git overrides in `~/.gitconfig.local` continue to work through a normal Git
+include; no copy into `~/.gitconfig` is needed. The Claude settings modify
+template replaces the old `script/claude-code-env.sh` hook with the new agent
+environment hook, keeping unrelated hooks and settings. VS Code settings that
+point at the old `agents/bash` path are updated in place.
+
+On a machine that already migrated but has cleanup left, run `chezmoi update`.
+The changed migration script runs again without resetting chezmoi's state.
+Repeated applies do not duplicate preserved settings. If an earlier migration
+already deleted both the tool-selection JSON and generated fragments, the old
+selection cannot be reconstructed automatically; add any missing tools to
+`config.local.toml` from your backup. The old `~/.antidote` checkout can be
+deleted once the new shell works.
 
 ## Testing
 
@@ -244,8 +274,8 @@ shell works.
 node --test tests/*.test.mjs
 ```
 
-The tests need `chezmoi` on `PATH` (or `CHEZMOI=/path/to/chezmoi`), and zsh for
-the shell tests. Each test runs `chezmoi init` and `chezmoi apply` into a
+The tests need `chezmoi` on `PATH` (or `CHEZMOI=/path/to/chezmoi`), Python 3.11
+or newer for migration, and zsh for the shell tests. Each test runs `chezmoi init` and `chezmoi apply` into a
 temporary `HOME`, skipping scripts and externals, and checks the result:
 
 - the mise config for each profile, and which agent files each profile gets;

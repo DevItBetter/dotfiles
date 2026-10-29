@@ -8,6 +8,18 @@
 {{- $settings = setValueAtPath "env.CLAUDE_CODE_SHELL" "/bin/bash" $settings -}}
 {{- $groups := list -}}
 {{- with (dig "hooks" "SessionStart" list $settings) }}{{ $groups = . }}{{ end -}}
+{{- /* Retire the old launcher while preserving unrelated hooks and group options. */ -}}
+{{- $clean := list -}}
+{{- range $group := $groups -}}
+{{-   $hooks := dig "hooks" list $group -}}
+{{-   $kept := list -}}
+{{-   range $hooks -}}
+{{-     $legacy := and (eq (dig "type" "" .) "command") (regexMatch `^/bin/bash ('[^']*/script/claude-code-env\.sh'|"[^"]*/script/claude-code-env\.sh"|[^[:space:]]*/script/claude-code-env\.sh)$` (toString (dig "command" "" .))) -}}
+{{-     if not $legacy }}{{ $kept = append $kept . }}{{ end -}}
+{{-   end -}}
+{{-   if or $kept (not $hooks) }}{{ $clean = append $clean (set $group "hooks" $kept) }}{{ end -}}
+{{- end -}}
+{{- $groups = $clean -}}
 {{- $present := false -}}
 {{- range $groups }}{{ range (dig "hooks" list .) }}{{ if eq (toString (dig "command" "" .)) $command }}{{ $present = true }}{{ end }}{{ end }}{{ end -}}
 {{- if not $present }}{{ $groups = append $groups (dict "hooks" (list (dict "type" "command" "command" $command))) }}{{ end -}}

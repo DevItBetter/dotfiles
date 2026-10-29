@@ -110,7 +110,7 @@ test("the legacy migration removes old checkout links and keeps local zsh files"
   mkdirSync(join(checkout, "zsh/config"));
   writeFileSync(join(checkout, "zsh/config/work.zsh"), "export WORK=1\n");
   symlinkSync("/elsewhere/rc", join(home, ".tmux.conf.keep"));
-  writeFileSync(join(home, ".config/mise/dotfiles-selection.json"), "{}");
+  writeFileSync(join(home, ".config/mise/dotfiles-selection.json"), '{"resolved":["node"]}');
   mkdirSync(join(home, ".config/mise/conf.d"));
   writeFileSync(join(home, ".config/mise/conf.d/10-dotfiles-node.toml"), "");
   writeFileSync(join(home, ".config/mise/conf.d/20-mine.toml"), "");

@@ -4,6 +4,12 @@
 	name = {{ .name }}
 	email = {{ .email }}
 
+{{ if stat (joinPath .chezmoi.homeDir ".gitconfig.local") -}}
+# Preserve overrides from the pre-chezmoi setup. ~/.gitconfig is read afterward.
+[include]
+    path = ~/.gitconfig.local
+{{ end }}
+
 [color]
     branch = auto
     diff = auto
