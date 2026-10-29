@@ -81,13 +81,14 @@ jobs:
           done
       - name: Check the installed environment
         shell: zsh -i {0}
+        # No `set -e`: interactive preexec hooks (alias-tips) return non-zero
+        # internally, which ERR_EXIT would treat as a failure.
         run: |
-          set -e
-          [[ $ZDOTDIR == $HOME/.config/zsh ]]
-          for tool in starship node python uv diff-so-fancy fzf tmux rg; do whence -p $tool; done
-          [[ $(git config user.name) == CI ]]
-          whence -w compdef _zsh_autosuggest_start
-          chezmoi verify --exclude scripts
+          [[ $ZDOTDIR == $HOME/.config/zsh ]] || exit 1
+          for tool in starship node python uv diff-so-fancy fzf tmux rg; do whence -p $tool || exit 1; done
+          [[ $(git config user.name) == CI ]] || exit 1
+          whence -w compdef _zsh_autosuggest_start || exit 1
+          chezmoi verify --exclude scripts || exit 1
       - name: zsh starts without output on stderr
         run: |
           errors="$(zsh -i -c exit 2>&1 >/dev/null)"
