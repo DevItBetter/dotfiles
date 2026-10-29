@@ -170,8 +170,15 @@ anything. Its invocation adds individual `shell_environment_policy.set` keys
 for the normalized PATH, Git pager, and Git color overrides, plus
 `allow_login_shell=false` and `features.shell_snapshot=false`. This prevents
 login startup and shell snapshots from restoring stale tool paths for agent
-commands. Codex continues to choose its native account shell; this does not
-force Bash.
+commands. Codex does not expose a global default-shell override. A managed
+block in `~/.codex/AGENTS.md` instructs it to explicitly select `/bin/bash` and
+`login=false` on every `exec_command` call. Existing personal guidance is kept.
+This is an instruction-based default, not launcher enforcement: the startup
+context can still report the account shell as zsh. Verify the shell used for
+commands with `printf '%s\\n' "$BASH_VERSION" "$0"`. Codex's
+[global instruction discovery](https://developers.openai.com/codex/guides/agents-md/)
+also applies this guidance to local Codex clients using the same home directory.
+An existing `AGENTS.override.md` takes precedence over `AGENTS.md`.
 
 These are per-invocation options using Codex's [native configuration](https://developers.openai.com/codex/config-advanced/#shell-environment-policy).
 They do not rewrite `~/.codex/config.toml`, select a model, or change sandbox,

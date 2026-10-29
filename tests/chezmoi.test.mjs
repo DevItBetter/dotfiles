@@ -20,7 +20,7 @@ test("core profile installs only the core tools and no agent integrations", (t) 
   const { home } = deployHome({ t, profile: "core" });
   assert.deepEqual(miseTools(home).sort(),
     ["aqua:starship/starship", "chezmoi", "node", "npm:diff-so-fancy", "python", "uv"]);
-  for (const path of [".config/opencode", ".pi", ".claude", ".local/share/agent-env/copilot", ".local/share/agent-env/codex",
+  for (const path of [".config/opencode", ".pi", ".claude", ".codex", ".local/share/agent-env/copilot", ".local/share/agent-env/codex",
     ".config/alacritty", ".config/zsh/conf.d/wsl2-ssh-agent.zsh"]) {
     assert(!exists(home, path), `${path} should not be deployed`);
   }
@@ -63,6 +63,27 @@ test("Claude settings keep the user's own keys and hooks, and re-apply adds noth
   assert.match(settings.hooks.SessionStart[1].hooks[0].command, /agent-env\/claude-code\.mjs"$/);
   run("apply", "--no-tty", "--exclude", "scripts,externals");
   assert.equal(read(home, ".claude/settings.json"), first);
+});
+
+test("Codex Bash guidance preserves personal instructions and updates its own block once", (t) => {
+  const own = "# Personal guidance\n\nKeep my project routing instructions.\n";
+  const { home, run } = deployHome({ t, profile: "gbl", setup: (home) => {
+    mkdirSync(join(home, ".codex"));
+    writeFileSync(join(home, ".codex/AGENTS.md"), own);
+  } });
+  const first = read(home, ".codex/AGENTS.md");
+  assert(first.startsWith(own));
+  assert(first.includes('shell to "/bin/bash" and login to false'));
+  assert(first.includes("Keep the current sandbox and approval policy"));
+  run("apply", "--exclude", "scripts,externals");
+  assert.equal(read(home, ".codex/AGENTS.md"), first);
+  writeFileSync(join(home, ".codex/AGENTS.md"), first.replace('shell to "/bin/bash"', 'shell to "/outdated/bash"') + "\nKeep trailing guidance.\n");
+  run("apply", "--exclude", "scripts,externals");
+  const updated = read(home, ".codex/AGENTS.md");
+  assert(updated.startsWith(own));
+  assert(updated.endsWith("Keep trailing guidance.\n"));
+  assert.equal(updated.split("<!-- BEGIN dotfiles command shell -->").length, 2);
+  assert(!updated.includes("/outdated/bash"));
 });
 
 test("Git identity comes from init answers, and ~/.gitconfig is never overwritten", (t) => {

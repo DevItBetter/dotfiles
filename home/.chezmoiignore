@@ -19,6 +19,7 @@
 {{- end }}
 {{- if not (has "codex" $tools) }}
 .local/share/agent-env/codex
+.codex
 {{- end }}
 {{- if not (stat (joinPath .chezmoi.homeDir ".cursor")) }}
 .cursor
