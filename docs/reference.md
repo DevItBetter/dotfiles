@@ -54,9 +54,9 @@ them embed a hash of the file they depend on for that reason.
 | `run_onchange_before_10-install-packages` | Installs `packages.yaml` with brew, apt, dnf, pacman, or zypper |
 | `run_once_before_20-install-mise` | Installs mise to `~/.local/bin` (Homebrew on macOS) |
 | `run_onchange_after_30-mise-install` | `mise install` whenever the mise config changes |
-| `run_onchange_after_40-zsh-plugins` | Builds the Antidote bundle when the plugin list changes |
+| `run_onchange_after_40-zsh-plugins` | Builds and syntax-checks the Antidote bundle when the plugin list changes, preserving the previous bundle on failure |
 | `run_onchange_after_45-tmux-plugins` | Runs TPM's `install_plugins` when `~/.tmux.conf` changes |
-| `run_onchange_after_50-configure-vscode` | Configures VS Code and VS Code Insiders, if installed |
+| `run_after_50-configure-vscode` | Checks VS Code and VS Code Insiders on every apply, if installed; configuration failures fail the apply |
 | `run_once_after_90-login-shell` | Runs `chsh` to zsh when there is a terminal to ask for a password |
 
 To apply files without running scripts, use `chezmoi apply --exclude scripts`.
@@ -163,11 +163,13 @@ command; in Pi use `/reload`. Claude Code picks up settings in new sessions.
 
 ## VS Code
 
-`run_onchange_after_50-configure-vscode` runs
+`run_after_50-configure-vscode` runs
 [configure-vscode.mjs](../home/dot_local/share/agent-env/configure-vscode.mjs)
 with `--python` for each installed edition. It needs VS Code 1.142 or newer and
-Node LTS from mise. If it can't configure an edition, it prints the error and
-the command to rerun, and the apply continues.
+Node LTS from mise. It checks each installed edition on every apply, writing
+only when changes are needed. If it can't configure an edition, it prints the
+error and the command to rerun, tries the other edition, and fails the apply.
+The next apply tries again. An absent editor is skipped.
 
 It sets four user settings (on macOS the profile keys end in `.osx`):
 
@@ -193,10 +195,9 @@ by hand:
 ~/.local/share/agent-env/node-lts ~/.local/share/agent-env/configure-vscode.mjs --insiders
 ```
 
-Restart VS Code afterward and open new agent sessions. Rerun after a VS Code
-update moves the bundled runtime: `chezmoi apply` won't notice, because the
-script reruns only when the configurator changes. Remote hosts, containers, and
-cloud sessions are not configured.
+Restart VS Code afterward and open new agent sessions. Run `chezmoi apply`
+after installing or updating VS Code to refresh its runtime launcher. Remote
+hosts, containers, and cloud sessions are not configured.
 
 ## tmux
 
