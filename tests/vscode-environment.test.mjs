@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync,
   rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -202,7 +202,7 @@ test("mise sandbox paths resolve symlinked installations and retain macOS's XDG 
   renameSync(join(f.bin, "mise"), target);
   symlinkSync(target, join(f.bin, "mise"));
   const paths = miseReadPaths({ home: f.home, data: f.data, env: { PATH: f.bin } });
-  assert(paths.includes(target));
+  assert(paths.includes(realpathSync(target)));
   assert(paths.includes(join(f.bin, "mise")));
   assert(paths.includes(join(f.home, ".config/mise")));
   assert.throws(() => miseReadPaths({ home: f.home, data: f.data, env: { MISE_DATA_DIR: "relative" } }), /absolute/);
