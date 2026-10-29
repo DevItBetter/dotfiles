@@ -1,0 +1,95 @@
+name: Dotfiles
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CHEZMOI_VERSION: v2.73.3
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install zsh, ShellCheck, and chezmoi
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            sudo apt-get update
+            sudo apt-get install -y zsh shellcheck
+          else
+            brew install shellcheck
+          fi
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" -t "$CHEZMOI_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Secure zsh completion directories
+        # Hosted runners leave some system completion directories group- or
+        # world-writable, which makes compinit warn on every shell start.
+        run: |
+          zsh -fc 'autoload -Uz compaudit
+            for d in ${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}; do sudo chmod g-w,o-w "$d"; done'
+      - name: Run tests
+        run: node --test tests/*.test.mjs
+      - name: Check shell and zsh syntax
+        run: |
+          shellcheck home/dot_local/bin/executable_tmux-pane-bg home/dot_local/share/agent-env/executable_* \
+            home/dot_local/share/agent-env/bin/executable_bash
+          for file in home/dot_zshenv home/dot_config/zsh/dot_zshrc home/dot_config/zsh/conf.d/*.zsh; do
+            zsh -n "$file"
+          done
+
+  # Bootstrap a fresh runner the way a new machine would be set up.
+  bootstrap:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" -t "$CHEZMOI_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: chezmoi init --apply
+        run: |
+          chezmoi init --apply --no-tty --source "$GITHUB_WORKSPACE" \
+            --promptString "Git user.name=CI,Git user.email=ci@example.com" \
+            --promptChoice "mise tool profile=core" --promptBool "Install desktop apps=false"
+      - name: Secure zsh completion directories
+        run: |
+          zsh -fc 'autoload -Uz compaudit
+            for d in ${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}; do sudo chmod g-w,o-w "$d"; done'
+      - name: ShellCheck the rendered scripts
+        run: |
+          for script in home/.chezmoiscripts/*; do
+            chezmoi execute-template <"$script" >"$RUNNER_TEMP/script.sh"
+            shellcheck -s bash "$RUNNER_TEMP/script.sh" || { echo "in $script"; exit 1; }
+          done
+      - name: Check the installed environment
+        shell: zsh -i {0}
+        # No `set -e`: interactive preexec hooks (alias-tips) return non-zero
+        # internally, which ERR_EXIT would treat as a failure.
+        run: |
+          [[ $ZDOTDIR == $HOME/.config/zsh ]] || exit 1
+          for tool in starship node python uv diff-so-fancy fzf tmux rg; do whence -p $tool || exit 1; done
+          [[ $(git config user.name) == CI ]] || exit 1
+          whence -w compdef _zsh_autosuggest_start || exit 1
+          chezmoi verify --exclude scripts || exit 1
+      - name: zsh starts without output on stderr
+        run: |
+          errors="$(zsh -i -c exit 2>&1 >/dev/null)"
+          [[ -z $errors ]] || { printf '%s\n' "$errors"; exit 1; }

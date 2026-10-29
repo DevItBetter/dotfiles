@@ -1,0 +1,5 @@
+{{- /* Print the selected profile's mise tool names, one per line. */ -}}
+{{- $p := index .mise.profiles .profile -}}
+{{- $names := dig "tools" list $p -}}
+{{- range dig "groups" list $p }}{{ $names = concat $names (index $.mise.groups .) }}{{ end -}}
+{{- $names | uniq | sortAlpha | join "\n" -}}

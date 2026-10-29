@@ -1,0 +1,66 @@
+{{- $pm := "" -}}
+{{- if eq .chezmoi.os "darwin" }}{{ $pm = "brew" -}}
+{{- else if lookPath "apt-get" }}{{ $pm = "apt" -}}
+{{- else if lookPath "dnf" }}{{ $pm = "dnf" -}}
+{{- else if lookPath "pacman" }}{{ $pm = "pacman" -}}
+{{- else if lookPath "zypper" }}{{ $pm = "zypper" -}}
+{{- end -}}
+{{- $wanted := .packages.base -}}
+{{- if .desktop }}{{ $wanted = concat $wanted .packages.desktop }}{{ end -}}
+{{- $names := dig $pm dict .packages.names -}}
+{{- $formulae := list -}}{{- $casks := list -}}
+{{- range $wanted -}}
+{{-   $name := dig . . $names -}}
+{{-   if and (eq $pm "brew") (has . $.packages.casks) }}{{ $casks = append $casks $name }}{{ else if $name }}{{ $formulae = append $formulae $name }}{{ end -}}
+{{- end -}}
+#!/bin/bash
+# Install system packages. chezmoi reruns this when the package list changes.
+# Skip it with: chezmoi apply --exclude scripts
+set -euo pipefail
+
+pm={{ $pm | quote }}
+packages=({{ range $formulae | uniq }} {{ . | quote }}{{ end }})
+casks=({{ range $casks }} {{ . | quote }}{{ end }})
+
+if [[ -z $pm ]]; then
+  printf 'Unknown package manager. Install these yourself: %s\n' "${packages[*]}" >&2
+  exit 0
+fi
+
+installed() {
+  case $pm in
+    apt) dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'ok installed' ;;
+    dnf|zypper) rpm -q --whatprovides "$1" >/dev/null 2>&1 ;;
+    pacman) pacman -Qq "$1" >/dev/null 2>&1 ;;
+    brew) brew list "$1" >/dev/null 2>&1 ;;
+  esac
+}
+missing=()
+for package in "${packages[@]}"; do
+  installed "$package" || missing+=("$package")
+done
+
+if [[ $pm == brew ]]; then
+  # macOS ships Bash 3.2, where "${empty[@]}" fails under set -u.
+  for cask in ${casks[@]+"${casks[@]}"}; do
+    brew list --cask "$cask" >/dev/null 2>&1 || brew install --cask "$cask"
+  done
+  (( ${#missing[@]} == 0 )) || brew install "${missing[@]}"
+  exit 0
+fi
+(( ${#missing[@]} )) || exit 0
+
+if (( EUID != 0 )) && ! command -v sudo >/dev/null 2>&1; then
+  printf 'No root or sudo. Install these yourself: %s\n' "${missing[*]}" >&2
+  exit 0
+fi
+as_root() {
+  if (( EUID == 0 )); then "$@"; else sudo "$@"; fi
+}
+printf 'Installing with %s: %s\n' "$pm" "${missing[*]}"
+case $pm in
+  apt) as_root apt-get update && as_root apt-get install -y "${missing[@]}" ;;
+  dnf) as_root dnf install -y "${missing[@]}" ;;
+  pacman) as_root pacman -S --needed --noconfirm "${missing[@]}" ;;
+  zypper) as_root zypper --non-interactive install "${missing[@]}" ;;
+esac

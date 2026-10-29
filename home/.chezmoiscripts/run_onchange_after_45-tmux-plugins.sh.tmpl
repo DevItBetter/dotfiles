@@ -1,0 +1,8 @@
+#!/bin/bash
+# Install the tmux plugins declared in ~/.tmux.conf. Reruns when that file changes.
+# tmux.conf hash: {{ include "dot_tmux.conf" | sha256sum }}
+set -euo pipefail
+command -v tmux >/dev/null 2>&1 || exit 0
+tpm="$HOME/.tmux/plugins/tpm/bin/install_plugins"
+[[ -x $tpm ]] || exit 0
+"$tpm" >/dev/null || printf 'tmux plugin install failed. Retry inside tmux with prefix + I.\n' >&2

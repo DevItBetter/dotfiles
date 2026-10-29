@@ -1,7 +1,0 @@
-[tools]
-"pipx:jdatamunch-mcp" = "latest"
-
-[_]
-label = "jdatamunch MCP"
-groups = ["jmunch"]
-requires = ["uv", "python"]

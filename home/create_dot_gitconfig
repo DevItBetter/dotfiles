@@ -1,0 +1,3 @@
+# Machine-local Git settings. chezmoi creates this file once and never edits it.
+# Shared settings live in ~/.config/git/config. See examples/git in the
+# dotfiles repository for per-directory identities.

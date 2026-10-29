@@ -1,5 +1,5 @@
 # Optional work-specific overrides for machines that use multiple GitHub SSH
-# keys. Include this file from ~/.gitconfig.local on the machines that need it.
+# keys. Include this file from ~/.gitconfig on the machines that need it.
 
 [user]
     name = Jeff Joltes

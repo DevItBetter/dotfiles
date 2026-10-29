@@ -1,0 +1,11 @@
+#!/bin/bash
+# Install the tools in ~/.config/mise/config.toml. Reruns when that file changes.
+# config hash: {{ includeTemplate "dot_config/mise/config.toml.tmpl" . | sha256sum }}
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+{{- if eq .chezmoi.os "darwin" }}
+for brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  if [[ -x $brew ]]; then eval "$("$brew" shellenv)"; break; fi
+done
+{{- end }}
+mise install --yes

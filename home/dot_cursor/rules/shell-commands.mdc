@@ -1,0 +1,10 @@
+---
+description: Keep automated shell commands independent of interactive configuration
+alwaysApply: true
+---
+
+# Shell Commands
+
+Do not source interactive shell configuration to run automated commands.
+Use explicit executables rather than relying on personal aliases.
+`nocorrect` is Zsh syntax; do not prepend it to Bash commands.

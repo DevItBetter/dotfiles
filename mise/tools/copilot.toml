@@ -1,7 +1,0 @@
-[tools]
-"npm:@github/copilot" = "latest"
-
-[_]
-label = "GitHub Copilot"
-groups = ["coding-agents"]
-requires = ["node"]

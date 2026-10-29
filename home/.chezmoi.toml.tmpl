@@ -1,0 +1,23 @@
+{{- /* Answers are saved in ~/.config/chezmoi/chezmoi.toml. Rerun `chezmoi init` to change them. */ -}}
+{{- $name := promptStringOnce . "name" "Git user.name" "Jeff Joltes" -}}
+{{- $email := promptStringOnce . "email" "Git user.email" "jeff.joltes@gmail.com" -}}
+{{- /* .chezmoidata is not loaded yet when this file renders. */ -}}
+{{- $profiles := (include ".chezmoidata/mise.yaml" | fromYaml).mise.profiles | keys | sortAlpha -}}
+{{- $profile := promptChoiceOnce . "profile" "mise tool profile" $profiles "core" -}}
+
+{{- $wsl := and (eq .chezmoi.os "linux") (.chezmoi.kernel.osrelease | lower | contains "microsoft") -}}
+{{- $container := or (stat "/.dockerenv") (stat "/run/.containerenv") | not | not -}}
+{{- $ssh := or (env "SSH_CONNECTION") (env "SSH_TTY") | not | not -}}
+{{- $display := or (env "WAYLAND_DISPLAY") (env "DISPLAY") (has (env "XDG_SESSION_TYPE") (list "x11" "wayland")) | not | not -}}
+{{- $desktopGuess := or (eq .chezmoi.os "darwin") (and (eq .chezmoi.os "linux") $display (not (or $wsl $container $ssh))) -}}
+{{- $desktop := promptBoolOnce . "desktop" "Install desktop apps" $desktopGuess -}}
+
+sourceDir = {{ .chezmoi.workingTree | quote }}
+
+[data]
+name = {{ $name | quote }}
+email = {{ $email | quote }}
+profile = {{ $profile | quote }}
+desktop = {{ $desktop }}
+wsl = {{ $wsl }}
+container = {{ $container }}

@@ -1,0 +1,21 @@
+# System packages installed by .chezmoiscripts/run_onchange_before_10-install-packages.sh.tmpl.
+# Names are logical; `names` maps them to a package manager's spelling.
+packages:
+  base: [zsh, git, curl, python3, fzf, tmux, ripgrep, less, shellcheck, perl-time-hires]
+  desktop: [alacritty]
+  names:
+    apt:
+      perl-time-hires: libtime-hires-perl
+    dnf:
+      perl-time-hires: perl-Time-HiRes
+      shellcheck: ShellCheck
+    pacman:
+      perl-time-hires: perl
+    zypper:
+      perl-time-hires: perl
+      shellcheck: ShellCheck
+    brew:
+      perl-time-hires: perl
+      python3: python
+  # Homebrew installs these with --cask.
+  casks: [alacritty]

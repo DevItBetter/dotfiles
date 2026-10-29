@@ -1,7 +1,0 @@
-[tools]
-"npm:@google/gemini-cli" = "latest"
-
-[_]
-label = "Gemini CLI"
-groups = ["coding-agents"]
-requires = ["node"]

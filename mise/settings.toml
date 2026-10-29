@@ -1,2 +1,0 @@
-[settings]
-minimum_release_age_excludes = ["npm:@openai/codex", "npm:@anthropic-ai/claude-code", "npm:@earendil-works/pi-coding-agent", "npm:@github/copilot"]

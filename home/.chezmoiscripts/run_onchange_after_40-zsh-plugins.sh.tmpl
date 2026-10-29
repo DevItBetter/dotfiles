@@ -1,0 +1,10 @@
+#!/bin/bash
+# Clone zsh plugins now so the first shell starts quickly.
+# plugins hash: {{ include "dot_config/zsh/dot_zsh_plugins.txt" | sha256sum }}
+set -euo pipefail
+command -v zsh >/dev/null 2>&1 || exit 0
+zdotdir="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
+[[ -r $zdotdir/.antidote/antidote.zsh ]] || exit 0
+# shellcheck disable=SC2016 # expanded by zsh
+ZDOTDIR="$zdotdir" zsh -fc 'source "$ZDOTDIR/.antidote/antidote.zsh" &&
+  antidote bundle <"$ZDOTDIR/.zsh_plugins.txt" >|"$ZDOTDIR/.zsh_plugins.zsh"'
