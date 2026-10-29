@@ -169,29 +169,40 @@ command; in Pi use `/reload`. Claude Code picks up settings in new sessions.
 
 `run_after_50-configure-vscode` runs
 [configure-vscode.mjs](../home/dot_local/share/agent-env/configure-vscode.mjs)
-with `--python` for each installed edition. It needs VS Code 1.142 or newer and
+with `--python` for each installed edition. It needs VS Code 1.144 or newer and
 Node LTS from mise. It checks each installed edition on every apply, writing
 only when changes are needed. If it can't configure an edition, it prints the
 error and the command to rerun, tries the other edition, and fails the apply.
 The next apply tries again. An absent editor is skipped.
 
-It sets four user settings (on macOS the profile keys end in `.osx`):
+It configures the following user settings (on macOS the profile keys end in `.osx`):
 
 - `chat.tools.terminal.terminalProfile.linux` and
   `terminal.integrated.agentHostProfile.linux` point at
-  `~/.local/share/agent-env/bin/bash`. That launcher starts Bash with the agent
+  the absolute path to `~/.local/share/agent-env/bin/bash`. The Agent Host does
+  not reliably expand `${env:HOME}` in this setting. That launcher starts Bash with the agent
   environment, skips your rc and login files, and keeps VS Code's shell
   integration. Your own terminals keep their usual shell.
-- `chat.agentHost.copilot.runtimePath` points at a launcher in
-  `~/.local/share/dotfiles/vscode/` that starts the editor's bundled Copilot
-  SDK runtime with the agent environment.
+- `chat.agentHost.customTerminalTool.enabled` enables the experimental terminal
+  tool for Copilot Agent Host sessions. This sends shell commands through the
+  configured Bash profile. VS Code manages its bundled runtime; the configurator
+  no longer searches SDK directories or scans compiled editor code.
+- `chat.agent.sandbox.fileSystem.linux.allowRead` grants sandboxed commands read
+  access to mise, its data, configuration, state, and cache directories. On macOS
+  the setting uses `.mac`. Paths follow the machine's mise and XDG overrides,
+  including custom shims and symlinked installations. Existing sandbox rules
+  are preserved, and write permissions are unchanged. These platform-specific
+  settings apply to the custom terminal tool, not the default Copilot SDK tool.
+  Sandboxing itself remains your choice; the configurator does not enable it.
 - `python.defaultInterpreterPath` becomes mise's Python `latest`, resolved to the
   real binary. A custom value such as `${workspaceFolder}/.venv` is left alone,
   and saved per-workspace interpreter choices are unchanged.
 
 The configurator keeps JSONC comments and other settings, backs up
 `settings.json` as `settings.json.before-dotfiles-agents` before its first
-change, and refuses symlinked settings files and conflicting values. To run it
+change, and refuses symlinked settings files and conflicting custom profiles or
+runtime overrides. It removes the previous dotfiles runtime override and its
+generated launcher when migrating. To run it
 by hand:
 
 ```sh
@@ -200,8 +211,15 @@ by hand:
 ```
 
 Restart VS Code afterward and open new agent sessions. Run `chezmoi apply`
-after installing or updating VS Code to refresh its runtime launcher. Remote
+after installing VS Code or changing mise's directory overrides. Remote
 hosts, containers, and cloud sessions are not configured.
+
+The custom terminal tool is experimental. To temporarily return to VS Code's
+default Copilot shell, set `chat.agentHost.customTerminalTool.enabled` to `false`
+and start a new session. That default tool does not use this Bash profile, so
+the dotfiles environment guarantees no longer apply. The next `chezmoi apply`
+enables the custom tool again. See the [upstream tool comparison](https://github.com/microsoft/vscode/issues/323399)
+and [sandbox compatibility notes](https://code.visualstudio.com/docs/agents/run/agent-sandboxing#local-harness-sessions-and-custom-terminal-tools).
 
 ## tmux
 
@@ -288,12 +306,20 @@ temporary `HOME`, skipping scripts and externals, and checks the result:
 - the agent launchers, plugins, and VS Code configurator, run from the
   deployed copies.
 
-An opt-in test drives VS Code's bundled Copilot SDK Bash tool inside its
-native sandbox, without model requests:
+The automated VS Code tests cover configuration migration, idempotence, JSONC
+preservation, sandbox path merging, and the deployed Bash launcher. They do not
+launch a live Copilot session. After an editor upgrade, verify in a fresh
+Copilot Agent Host session that Node follows project mise configs and separate
+`(exit 7)` and `sh -c 'exit 7'` tool calls both report exit code 7.
 
-```sh
-VSCODE_APP_ROOT=/usr/share/code/resources/app node --test tests/vscode-sdk.test.mjs
-```
+For sandbox verification on Linux, write uniquely named markers inside and
+outside the workspace, then check from the host which files persisted. A
+hidden home directory can be replaced by a writable temporary filesystem:
+a successful write there does not mean the host file was changed. A sandboxed
+process must not be able to change the real outside-workspace marker. Remove
+the test markers afterward. Public terminal API exit events can omit an exit
+code for a bare subshell with clean Bash startup; check actual agent tool
+results rather than treating a missing event code as success.
 
 CI runs the tests on Ubuntu and macOS, then bootstraps a fresh runner with
 `chezmoi init --apply` and checks that the tools are installed and that zsh

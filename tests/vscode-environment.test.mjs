@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync,
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
   rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,7 +10,7 @@ import { sharedHome } from "./home.mjs";
 
 const { agentEnv } = sharedHome();
 const configure = join(agentEnv, "configure-vscode.mjs");
-const { misePython, parseSettings, updateSettings, vscodePlan } = await import(pathToFileURL(configure).href);
+const { misePython, miseReadPaths, parseSettings, updateSettings, vscodePlan } = await import(pathToFileURL(configure).href);
 const bash = join(agentEnv, "bin/bash");
 const command = [join(agentEnv, "node-lts"), join(agentEnv, "command-launcher.mjs")];
 
@@ -29,7 +29,7 @@ function fixture(t) {
     "prebuilds", target, "copilot-runtime");
   const pythonBin = join(data, "mise/installs/python/latest/bin/python");
   for (const path of [home, bin, dirname(runtime), dirname(settings), dirname(pythonBin)]) mkdirSync(path, { recursive: true });
-  writeFileSync(join(appRoot, "package.json"), '{"version":"1.142.0"}\n');
+  writeFileSync(join(appRoot, "package.json"), '{"version":"1.144.0"}\n');
   const bundle = join(appRoot, "out/vs/workbench/workbench.desktop.main.js");
   mkdirSync(dirname(bundle), { recursive: true });
   writeFileSync(bundle, 'chat.tools.terminal.terminalProfile.linux terminal.integrated.agentHostProfile.linux chat.agentHost.copilot.runtimePath');
@@ -155,6 +155,59 @@ test("JSONC additions handle empty objects and a last property without a comma",
   }
 });
 
+test("JSONC removal preserves neighboring comments and valid commas in every position", () => {
+  for (const source of [
+    '{"remove":1}', '{"remove":1,}', '{"remove":1,"keep":2}',
+    '{"keep":2,"remove":1}', '{"keep":2,"remove":1,}',
+    '{"keep":2, /* retain */ "remove":1 /* retain too */}',
+    '{"a":3,"remove":{"nested":[1,2]},"keep":2}',
+  ]) {
+    const after = updateSettings(source, {}, ["remove"]);
+    const expected = parseSettings(source).data;
+    delete expected.remove;
+    assert.deepEqual(parseSettings(after).data, expected, after);
+    if (source.includes("retain")) {
+      assert(after.includes("/* retain */"));
+      assert(after.includes("/* retain too */"));
+    }
+    assert.equal(updateSettings(after, {}, ["remove"]), after);
+  }
+});
+
+test("sandbox read permissions use mise/XDG overrides without changing write or deny rules", (t) => {
+  const f = fixture(t);
+  const key = `chat.agent.sandbox.fileSystem.${process.platform === "darwin" ? "mac" : "linux"}`;
+  const original = { allowRead: ["/personal/read"], allowWrite: ["/personal/write"],
+    denyRead: ["/personal/secret"], denyWrite: ["/personal/readonly"] };
+  writeFileSync(f.settings, updateSettings(readFileSync(f.settings, "utf8"), { [key]: original }));
+  Object.assign(f.env, { MISE_CONFIG_DIR: join(f.directory, "mise-config"),
+    MISE_STATE_DIR: join(f.directory, "mise-state"), XDG_CACHE_HOME: join(f.directory, "cache"),
+    MISE_SHIMS_DIR: join(f.directory, "shims") });
+  const result = cli(f);
+  assert.equal(result.status, 0, result.stderr);
+  const sandbox = parseSettings(readFileSync(f.settings, "utf8")).data[key];
+  for (const name of ["allowWrite", "denyRead", "denyWrite"]) assert.deepEqual(sandbox[name], original[name]);
+  for (const path of ["/personal/read", join(f.home, ".local/bin/mise"), join(f.data, "mise"),
+    f.env.MISE_CONFIG_DIR, f.env.MISE_STATE_DIR, join(f.env.XDG_CACHE_HOME, "mise"), f.env.MISE_SHIMS_DIR,
+    join(f.bin, "mise")]) assert(sandbox.allowRead.includes(path), path);
+  assert(!sandbox.allowRead.includes(f.home));
+  assert(!sandbox.allowRead.includes(join(f.config, "mise")));
+  assert.equal(cli(f).status, 0);
+  assert(!existsSync(f.settings + ".before-dotfiles-agents.1"));
+});
+
+test("mise sandbox paths resolve symlinked installations and retain macOS's XDG config convention", (t) => {
+  const f = fixture(t);
+  const target = join(f.directory, "mise-real");
+  renameSync(join(f.bin, "mise"), target);
+  symlinkSync(target, join(f.bin, "mise"));
+  const paths = miseReadPaths({ home: f.home, data: f.data, env: { PATH: f.bin } });
+  assert(paths.includes(target));
+  assert(paths.includes(join(f.bin, "mise")));
+  assert(paths.includes(join(f.home, ".config/mise")));
+  assert.throws(() => miseReadPaths({ home: f.home, data: f.data, env: { MISE_DATA_DIR: "relative" } }), /absolute/);
+});
+
 test("invalid JSONC and duplicate root keys are refused", () => {
   for (const source of ['{"x":1,"x":2}', "[]", "null", "{,}", '{"x":[,]}', '{"x":1', "{/*", '{"x":true "y":false}']) {
     assert.throws(() => updateSettings(source, { added: true }), undefined, source);
@@ -169,10 +222,10 @@ test("VS Code dry run changes no files and does not create the runtime launcher"
   assert.equal(readFileSync(f.settings, "utf8"), before);
   assert(!existsSync(join(f.data, "dotfiles")));
   assert(!existsSync(f.settings + ".before-dotfiles-agents"));
-  assert.match(result.stdout, /chat\.agentHost\.copilot\.runtimePath/);
+  assert.match(result.stdout, /chat\.agentHost\.customTerminalTool\.enabled/);
 });
 
-test("VS Code setup changes only three agent settings, keeps a backup, and is idempotent", (t) => {
+test("VS Code terminal setup preserves user settings, keeps a backup, and is idempotent", (t) => {
   const f = fixture(t);
   const before = readFileSync(f.settings, "utf8");
   const result = cli(f);
@@ -181,8 +234,12 @@ test("VS Code setup changes only three agent settings, keeps a backup, and is id
   const after = readFileSync(f.settings, "utf8");
   const settings = parseSettings(after).data;
   for (const [key, value] of Object.entries(parseSettings(before).data)) assert.equal(settings[key], value);
-  assert.equal(Object.keys(settings).length, Object.keys(parseSettings(before).data).length + 3);
-  assert.equal(settings["chat.agentHost.customTerminalTool.enabled"], undefined);
+  assert.equal(Object.keys(settings).length, Object.keys(parseSettings(before).data).length + 4);
+  assert.equal(settings["chat.agentHost.customTerminalTool.enabled"], true);
+  assert.equal(settings["chat.agentHost.copilot.runtimePath"], undefined);
+  const os = process.platform === "darwin" ? "osx" : "linux";
+  assert.equal(settings[`terminal.integrated.agentHostProfile.${os}`].path, bash);
+  assert(!existsSync(join(f.data, "dotfiles")));
   assert.equal(settings["chat.agentHost.shellTool.initScript.enabled"], undefined);
   assert.equal(settings["terminal.integrated.defaultProfile.linux"], undefined);
   assert(!existsSync(join(f.config, "Code - Insiders")));
@@ -191,20 +248,26 @@ test("VS Code setup changes only three agent settings, keeps a backup, and is id
   assert(!existsSync(f.settings + ".before-dotfiles-agents.1"));
 });
 
-test("generated runtime launcher forwards stdio to the editor's bundled runtime", (t) => {
+test("migration removes only the managed runtime override and launcher, including legacy shell paths", (t) => {
   const f = fixture(t);
-  assert.equal(cli(f).status, 0);
-  const settings = parseSettings(readFileSync(f.settings, "utf8")).data;
-  const wrapper = settings["chat.agentHost.copilot.runtimePath"];
-  const result = spawnSync(wrapper, ["--stdio"], { env: f.env, input: "Content-Length: 0\r\n\r\n",
-    encoding: "utf8", timeout: 10000 });
+  const launcher = join(f.data, "dotfiles/vscode/stable/copilot-runtime");
+  mkdirSync(dirname(launcher), { recursive: true });
+  writeFileSync(launcher, "#!/bin/bash\n# Generated by dotfiles agent-env/configure-vscode.mjs.\nexec /old/runtime\n", { mode: 0o755 });
+  const os = process.platform === "darwin" ? "osx" : "linux";
+  const before = updateSettings(readFileSync(f.settings, "utf8"), {
+    "chat.agentHost.copilot.runtimePath": launcher,
+    [`terminal.integrated.agentHostProfile.${os}`]: { path: "${env:HOME}/.local/share/agent-env/bin/bash" },
+    [`chat.tools.terminal.terminalProfile.${os}`]: { path: join(f.home, ".local/share/agent-env/bin/bash") },
+  });
+  writeFileSync(f.settings, before);
+  const result = cli(f);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, "");
-  const output = JSON.parse(result.stdout);
-  assert.equal(output.pid, result.pid);
-  assert.deepEqual(output.args, ["--stdio"]);
-  assert.equal(output.input, "Content-Length: 0\r\n\r\n");
-  assert.equal(output.pager, "cat");
+  const settings = parseSettings(readFileSync(f.settings, "utf8")).data;
+  assert.equal(settings["chat.agentHost.copilot.runtimePath"], undefined);
+  assert.equal(settings[`terminal.integrated.agentHostProfile.${os}`].path, bash);
+  assert.equal(readFileSync(f.settings + ".before-dotfiles-agents", "utf8"), before);
+  assert(!existsSync(launcher));
+  assert.equal(cli(f).status, 0);
 });
 
 test("existing custom agent profiles are not overwritten", (t) => {
@@ -233,23 +296,24 @@ for (const dangling of [false, true]) {
   });
 }
 
-test("unsupported editor versions, missing runtimes, and unmanaged launchers are refused", (t) => {
+test("unsupported editors and unmanaged runtime overrides or launchers are refused", (t) => {
   const f = fixture(t);
   const options = { ...f };
   writeFileSync(join(f.appRoot, "package.json"), '{"version":"1.141.0"}');
-  assert.throws(() => vscodePlan(options), /1\.142/);
-  writeFileSync(join(f.appRoot, "package.json"), '{"version":"1.142.0"}');
+  assert.throws(() => vscodePlan(options), /1\.144/);
+  writeFileSync(join(f.appRoot, "package.json"), '{"version":"1.144.0"}');
   const plan = vscodePlan(options);
-  const bundle = join(f.appRoot, "out/vs/workbench/workbench.desktop.main.js");
-  const declarations = readFileSync(bundle, "utf8");
-  writeFileSync(bundle, "The runtime override no longer exists.");
-  assert.throws(() => vscodePlan(options), /does not expose/);
-  writeFileSync(bundle, declarations);
+  writeFileSync(f.settings, '{"chat.agentHost.copilot.runtimePath":"/custom/runtime"}');
+  assert.throws(() => vscodePlan(options), /runtimePath differs/);
+  writeFileSync(f.settings, '{}');
   mkdirSync(dirname(plan.launcher), { recursive: true });
   writeFileSync(plan.launcher, "# My own launcher\n");
   assert.throws(() => vscodePlan(options), /not managed/);
+  rmSync(plan.launcher);
+  // No compiled-bundle scan or dependency on SDK package layout remains.
   rmSync(f.runtime);
-  assert.throws(() => vscodePlan(options), /bundled Copilot runtime/);
+  rmSync(join(f.appRoot, "out"), { recursive: true });
+  assert.doesNotThrow(() => vscodePlan(options));
 });
 
 test("Insiders setup is opt-in and does not change stable settings", (t) => {
@@ -259,8 +323,9 @@ test("Insiders setup is opt-in and does not change stable settings", (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(f.settings, "utf8"), before);
   const settings = parseSettings(readFileSync(join(f.config, "Code - Insiders/User/settings.json"), "utf8")).data;
-  assert.match(settings["chat.agentHost.copilot.runtimePath"], /insiders\/copilot-runtime$/);
-  assert.equal(readdirSync(join(f.data, "dotfiles/vscode")).join(","), "insiders");
+  assert.equal(settings["chat.agentHost.copilot.runtimePath"], undefined);
+  assert.equal(settings["chat.agentHost.customTerminalTool.enabled"], true);
+  assert(!existsSync(join(f.data, "dotfiles/vscode")));
 });
 
 test("Python default configuration is opt-in", (t) => {
