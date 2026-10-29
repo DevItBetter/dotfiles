@@ -91,5 +91,10 @@ jobs:
           chezmoi verify --exclude scripts || exit 1
       - name: zsh starts without output on stderr
         run: |
-          errors="$(zsh -i -c exit 2>&1 >/dev/null)"
-          [[ -z $errors ]] || { printf '%s\n' "$errors"; exit 1; }
+          for term in xterm-256color dumb; do
+            errors="$(TERM="$term" zsh -i -c '
+              [[ $_comps[ggp] == _git && $_comps[npm] == _zbnc_zsh_better_npm_completion ]] &&
+              (( $+functions[_pip] && $+functions[_age] ))
+            ' 2>&1 >/dev/null)"
+            [[ -z $errors ]] || { printf '%s\n' "$errors"; exit 1; }
+          done

@@ -1,4 +1,12 @@
 # -------------------------------------------------------------------
+# Completion initialization
+# -------------------------------------------------------------------
+# Add functions before compinit, then let plugins call compdef directly.
+zsh-users/zsh-completions path:src kind:fpath
+ohmyzsh/ohmyzsh path:plugins/pip kind:fpath
+$ZDOTDIR/conf.d/completions.zsh
+
+# -------------------------------------------------------------------
 # Git (oh-my-zsh plugin)
 # -------------------------------------------------------------------
 ohmyzsh/ohmyzsh path:plugins/git
@@ -19,9 +27,6 @@ lukechilds/zsh-better-npm-completion
 # -------------------------------------------------------------------
 chrissicool/zsh-256color
 ohmyzsh/ohmyzsh path:plugins/command-not-found
-
-# Completions (load before compinit)
-zsh-users/zsh-completions path:src kind:fpath
 
 # Autosuggestions
 zsh-users/zsh-autosuggestions

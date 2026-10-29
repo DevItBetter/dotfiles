@@ -1,4 +1,3 @@
-(( $+functions[compdef] )) && unfunction compdef
 autoload -Uz compinit compaudit
 _zconf_dump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
 [[ -d ${_zconf_dump:h} ]] || mkdir -p "${_zconf_dump:h}"
@@ -11,10 +10,7 @@ if _zconf_insecure=(${(M)${(f)"$(compaudit 2>/dev/null)"}:#/*}); (( ${#_zconf_in
 else
   compinit -d "$_zconf_dump"
 fi
-for _zconf_compdef in "${_zconf_compdefs[@]}"; do
-  eval "compdef $_zconf_compdef"
-done
-unset _zconf_insecure _zconf_dump _zconf_compdef _zconf_compdefs
+unset _zconf_insecure _zconf_dump
 zmodload -i zsh/complist
 
 # man zshcontrib

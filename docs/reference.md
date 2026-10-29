@@ -85,11 +85,13 @@ stop there.
 Interactive shells then read `~/.config/zsh/.zshrc`, which runs in this order:
 
 1. `conf.d/exports.zsh`, then `mise activate zsh`.
-2. Antidote loads the plugins in `.zsh_plugins.txt`. If Antidote is missing, the
-   shell starts without plugins.
-3. History and options, then `conf.d/completions.zsh`, which runs `compinit`
-   once with its dump in `~/.cache/zsh`. Plugins that call `compdef` before then
-   are queued and replayed afterward.
+2. Antidote follows `.zsh_plugins.txt`: add the `zsh-completions` and pip
+   completion directories to `fpath`, source the local
+   `conf.d/completions.zsh` to run `compinit`, then load plugins.
+   Plugins can call `compdef` directly. The completion dump lives in
+   `~/.cache/zsh`. Without Antidote, the shell initializes system completions
+   directly and starts without plugins.
+3. History and options from `conf.d/`.
 4. Key bindings, fzf, aliases, and functions from `conf.d/`.
 5. `conf.d/wsl2-ssh-agent.zsh` on WSL.
 6. starship, then `~/.config/zsh/local.zsh` if it exists.
