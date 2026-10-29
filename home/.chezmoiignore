@@ -17,6 +17,9 @@
 {{- if not (has "copilot" $tools) }}
 .local/share/agent-env/copilot
 {{- end }}
+{{- if not (has "codex" $tools) }}
+.local/share/agent-env/codex
+{{- end }}
 {{- if not (stat (joinPath .chezmoi.homeDir ".cursor")) }}
 .cursor
 {{- end }}

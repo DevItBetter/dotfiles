@@ -93,6 +93,14 @@ elif [[ ${aliases[copilot]-} == ${(q)_zconf_copilot} ]]; then
 fi
 unset _zconf_copilot
 
+_zconf_codex=$HOME/.local/share/agent-env/codex
+if [[ -x $_zconf_codex ]]; then
+  alias codex=${(q)_zconf_codex}
+elif [[ ${aliases[codex]-} == ${(q)_zconf_codex} ]]; then
+  unalias codex
+fi
+unset _zconf_codex
+
 # -------------------------------------------------------------------
 # Oddball stuff
 # -------------------------------------------------------------------

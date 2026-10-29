@@ -145,6 +145,7 @@ Each agent gets it differently:
 | Pi | Extension at `~/.pi/agent/extensions/command-environment.js` that sets the environment on the Pi process, so its Bash tool and `!` commands inherit it |
 | Claude Code | `~/.claude/settings.json` gets `env.CLAUDE_CODE_SHELL=/bin/bash` and a `SessionStart` hook that writes the environment to `$CLAUDE_ENV_FILE` |
 | Copilot CLI | zsh aliases `copilot` to `~/.local/share/agent-env/copilot`, which execs Copilot under Node LTS with the environment |
+| Codex CLI | zsh aliases `codex` to `~/.local/share/agent-env/codex`, which runs the npm CLI under Node LTS and supplies native command environment overrides |
 | VS Code | See [VS Code](#vs-code) |
 
 All of them run Node LTS through `agent-env/node-lts`, which asks
@@ -161,6 +162,30 @@ The Copilot alias exists only when the launcher is deployed, which happens only
 when the profile includes Copilot. Outside zsh, run
 `~/.local/share/agent-env/copilot` directly. The launcher preserves arguments,
 stdin, signals, and exit status, and it handles mise's npm shell wrappers.
+
+The Codex alias is also deployed only when the selected profile includes Codex.
+Outside zsh, run `~/.local/share/agent-env/codex` directly. The launcher resolves
+the installed `npm:@openai/codex` executable through mise without installing
+anything. Its invocation adds individual `shell_environment_policy.set` keys
+for the normalized PATH, Git pager, and Git color overrides, plus
+`allow_login_shell=false` and `features.shell_snapshot=false`. This prevents
+login startup and shell snapshots from restoring stale tool paths for agent
+commands. Codex continues to choose its native account shell; this does not
+force Bash.
+
+These are per-invocation options using Codex's [native configuration](https://developers.openai.com/codex/config-advanced/#shell-environment-policy).
+They do not rewrite `~/.codex/config.toml`, select a model, or change sandbox,
+approval, authentication, or MCP settings. Unrelated environment policy keys
+and inherited Git overrides are retained. Filters that explicitly exclude the
+environment variables still apply. Explicit `-c` options passed after the
+launcher defaults can override them. The integration applies to locally
+executed CLI commands, not a separately launched desktop app or a remote host.
+User-entered `!` commands follow Codex's separate user-shell behavior and are
+not evidence that agent sandboxing is active.
+
+After applying, start a fresh zsh or run
+`source ~/.config/zsh/conf.d/aliases.zsh`, then launch `codex` normally. To bypass
+the alias for one invocation, use `command codex`.
 
 After changing these files, restart the agent. In OpenCode use its reload
 command; in Pi use `/reload`. Claude Code picks up settings in new sessions.

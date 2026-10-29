@@ -20,7 +20,7 @@ test("core profile installs only the core tools and no agent integrations", (t) 
   const { home } = deployHome({ t, profile: "core" });
   assert.deepEqual(miseTools(home).sort(),
     ["aqua:starship/starship", "chezmoi", "node", "npm:diff-so-fancy", "python", "uv"]);
-  for (const path of [".config/opencode", ".pi", ".claude", ".local/share/agent-env/copilot",
+  for (const path of [".config/opencode", ".pi", ".claude", ".local/share/agent-env/copilot", ".local/share/agent-env/codex",
     ".config/alacritty", ".config/zsh/conf.d/wsl2-ssh-agent.zsh"]) {
     assert(!exists(home, path), `${path} should not be deployed`);
   }
@@ -33,12 +33,14 @@ test("profiles deploy the integrations for the agents they install", (t) => {
   assert(exists(terumo, ".config/opencode/plugins/command-environment.js"));
   assert(exists(terumo, ".pi/agent/extensions/command-environment.js"));
   assert(exists(terumo, ".local/share/agent-env/copilot"));
+  assert(!exists(terumo, ".local/share/agent-env/codex"));
   assert(exists(terumo, ".config/alacritty/alacritty.toml"));
   assert(!exists(terumo, ".claude"));
   assert.match(read(terumo, ".config/opencode/plugins/command-environment.js"),
     new RegExp(`from "${join(terumo, ".local/share/agent-env/command-environment.mjs")}"`));
 
   const gbl = deployHome({ t, profile: "gbl" }).home;
+  assert(exists(gbl, ".local/share/agent-env/codex"));
   assert(miseTools(gbl).includes("npm:@anthropic-ai/claude-code"));
   const settings = JSON.parse(read(gbl, ".claude/settings.json"));
   assert.equal(settings.env.CLAUDE_CODE_SHELL, "/bin/bash");
