@@ -28,7 +28,8 @@ if is_wsl && [[ -r "$_zconf/wsl2-ssh-agent.zsh" ]]; then
   source "$_zconf/wsl2-ssh-agent.zsh"
 fi
 
-if (( $+commands[starship] )); then
+# Starship errors on dumb terminals, which is how agents and editors run zsh.
+if (( $+commands[starship] )) && [[ $TERM != dumb ]]; then
   eval "$(starship init zsh)"
 fi
 

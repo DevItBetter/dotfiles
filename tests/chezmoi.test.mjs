@@ -137,8 +137,13 @@ for (const term of ["xterm-256color", "dumb"]) {
   test(`interactive zsh starts silently with TERM=${term}`, { skip: !zsh }, (t) => {
     const { home } = deployHome({ t, profile: "core" });
     writeFileSync(join(home, ".config/zsh/local.zsh"), "print -r -- LOCAL_LOADED\n");
+    // Like the real starship, this stub complains when TERM=dumb.
+    const stubs = join(home, "stubs");
+    mkdirSync(stubs);
+    writeFileSync(join(stubs, "starship"),
+      '#!/bin/sh\n[ "$TERM" = dumb ] && echo "starship: dumb terminal" >&2\nexit 0\n', { mode: 0o755 });
     const result = spawnSync(zsh, ["-i", "-c", 'print -r -- "$ZDOTDIR"; whence -w compdef'], {
-      env: { HOME: home, TERM: term, PATH: "/usr/bin:/bin" }, encoding: "utf8", timeout: 20000,
+      env: { HOME: home, TERM: term, PATH: `${stubs}:/usr/bin:/bin` }, encoding: "utf8", timeout: 20000,
     });
     assert.equal(result.stderr, "");
     assert.equal(result.stdout, `LOCAL_LOADED\n${join(home, ".config/zsh")}\ncompdef: function\n`);
