@@ -50,7 +50,8 @@ printf '%s\\n' "$*" >> "$HOME/attempts"
 case " $* " in *" --insiders "*) exit 0 ;; esac
 [ ! -f "$HOME/fail-stable" ]
 `, { mode: 0o755 });
-  assert.equal(apply().status, 0, "absent editors must be optional");
+  const absent = apply();
+  assert.equal(absent.status, 0, absent.error?.message || absent.stderr || "absent editors must be optional");
   for (const name of ["code", "code-insiders"]) {
     writeFileSync(join(bin, name), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
   }

@@ -7,7 +7,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const repo = fileURLToPath(new URL("../", import.meta.url));
-export const chezmoi = process.env.CHEZMOI || "chezmoi";
+// Resolve before tests replace PATH or HOME to isolate the deployed programs.
+const found = spawnSync("/bin/sh", ["-c", 'command -v "$1"', "sh", process.env.CHEZMOI || "chezmoi"], {
+  encoding: "utf8",
+});
+if (found.status !== 0) throw new Error("Install chezmoi or set CHEZMOI to its executable path.");
+export const chezmoi = realpathSync(found.stdout.trim());
 
 // Prompt answers keyed by the prompt text in home/.chezmoi.toml.tmpl.
 // Pass the test context `t` to delete the HOME when that test ends.
